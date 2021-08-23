@@ -1,0 +1,80 @@
+hush
+
+d1 $ s "bd"
+
+d1 $ s "bd hh bd [hh hh]"
+
+d1
+  $ striate 8
+  $ s "opDrone*2"
+  # legato "2"
+  # speed "-0.5"
+  # cut "1"
+
+d1
+  $ s "gummiVox:1*2"
+  $ speed (fromString (mconcat (fmap ((" " ++) . show . (*0.1)) [1..8])))
+  # cut "1"
+
+d1 $ interlace (sound  "bd sn kurt") (every 3 rev $ sound  "bd sn:2")
+
+hush
+
+d2
+  $ striate 2
+  $ rarely (# speed "0.25")
+  $ sometimes (density 10)
+  $ s "opDrone:1*2"
+  # pan (rand)
+  # gain "0.7"
+
+d3
+  $ chunk 2 (hurry 2)
+  $ striate 3
+  $ s "opClick*7"
+  # n (irand 7)
+
+d4
+  $ hurry 2
+  $ s "opSn(6,8)"
+  # n "2 9 0 1 2 4"
+
+d5
+  $ almostNever (# speed "-4")
+  $ chunk 2 (hurry 2)
+  $ s "opTom2(4,8)"
+
+d6
+  $ every 4 (# n "2")
+  $ striate 8
+  $ rarely (|+| accelerate "0 -1")
+  $ sometimes (# speed "0.25")
+  $ s "opWeird*8"
+  # legato "1"
+  # gain "1.2"
+
+d7
+  $ density 16
+  $ striate 16
+  $ s "blood(4,4)"
+  # gain "1"
+  -- # shape "0.9"
+  # gain "1"
+  # delay "0.2"
+  # speed "1"
+  # shape "0.9"
+  -- # legato "1"
+
+d8
+  $ s "opHit(1,4)"
+  # n (irand 5)
+
+hush
+
+d7 $ silence
+
+d3
+  $ density 0.5
+  $ s "opHit(1,5)"
+  # n (irand 6)
+
