@@ -4,8 +4,6 @@
 ;; sync' after modifying this file!
 
 ;; other configuration examples
-;; https://github.com/hlissner/doom-emacs-private
-;; https://github.com/zaiste/.doom.d/blob/master/init.el
 ;;
 
 ;; Some functionality uses this to identify you, e.g. GPG configuration, email
@@ -56,12 +54,6 @@
 ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
 ;; they are implemented.
 
-;; global settings
-;; FIXME: Should global settings (and doom standard package ones) go in (after! emacs :config)
-;;
-;; Make gc pauses faster by decreasing the threshold.
-(setq gc-cons-threshold (* 2 1000 1000))
-
 (setq evil-split-window-below t
       evil-vsplit-window-right t
       confirm-kill-emacs nil
@@ -71,47 +63,68 @@
 ;; setq-default sets variables that are usually local to buffers
 (setq-default truncate-lines nil)
 
-;; lsp settings
-(global-so-long-mode -1)
-(setq lsp-modeline-diagnostics-scope :project)
-(setq lsp-modeline-code-actions-segments '(count icon))
 (setq vertico-sort-function #'vertico-sort-history-alpha)
 
-;; tidal
-;;
-;; latest start.scd for SC
-;;
-;; Server.local.options.sampleRate = 44100;
-;; SuperDirt.start;
-;; s.reboot
-(use-package! tidal
-    :init
+(defun style/left-frame ()
+  (interactive)
+  (cond
+   ((string-equal system-type "windows-nt") ; Microsoft Windows
     (progn
-      ;; (setq tidal-interpreter "ghci")
-      ;; (setq tidal-interpreter-arguments (list "ghci" "-XOverloadedStrings" "-package" "tidal"))
-      ;; (setq tidal-boot-script-path "~/.emacs.doom/.local/straight/repos/Tidal/BootTidal.hs")
-      ))
+      (set-frame-parameter (selected-frame) 'fullscreen nil)
+      (set-frame-parameter (selected-frame) 'vertical-scroll-bars nil)
+      (set-frame-parameter (selected-frame) 'horizontal-scroll-bars nil)
+      (set-frame-parameter (selected-frame) 'top 10)
+      (set-frame-parameter (selected-frame) 'left 6)
+      (set-frame-parameter (selected-frame) 'height 40)
+      (set-frame-parameter (selected-frame) 'width 120)))
+   ((string-equal system-type "darwin") ; Mac OS X
+    (progn
+      (set-frame-parameter (selected-frame) 'fullscreen nil)
+      (set-frame-parameter (selected-frame) 'vertical-scroll-bars nil)
+      (set-frame-parameter (selected-frame) 'horizontal-scroll-bars nil)
+      (set-frame-parameter (selected-frame) 'top 23)
+      (set-frame-parameter (selected-frame) 'left 0)
+      (set-frame-parameter (selected-frame) 'height 44)
+      (set-frame-parameter (selected-frame) 'width 100)
+      (message "default-frame set")))
+   ((string-equal system-type "gnu/linux") ; linux
+    (progn
+      (message "Linux")))))
 
-;; deft configuration
-;;
-;;
-(after! deft
-  (setq
-   deft-directory "~/org/notes"
-   deft-extensions '("org" "txt" "md")
-   deft-recursive t
-   deft-file-naming-rules
-   (quote
-    ((noslash . "-")
-     (nospace . "-")
-     (case-fn . downcase)))
-   deft-strip-summary-regexp "\\([
-	]\\|^#\\+.+:.*$\\)"
-   delete-by-moving-to-trash nil
-   ))
+(add-to-list 'initial-frame-alist '(top . 23))
+(add-to-list 'initial-frame-alist '(left . 0))
+(add-to-list 'initial-frame-alist '(height . 44))
+(add-to-list 'initial-frame-alist '(width . 100))
 
-;; org
-;;
+(defun style/max-frame ()
+  (interactive)
+  (if t
+      (progn
+        (set-frame-parameter (selected-frame) 'fullscreen 'fullboth)
+        (set-frame-parameter (selected-frame) 'vertical-scroll-bars nil)
+        (set-frame-parameter (selected-frame) 'horizontal-scroll-bars nil))
+    (set-frame-parameter (selected-frame) 'top 26)
+    (set-frame-parameter (selected-frame) 'left 2)
+    (set-frame-parameter (selected-frame) 'width
+                         (floor (/ (float (x-display-pixel-width)) 9.15)))
+    (if (= 1050 (x-display-pixel-height))
+        (set-frame-parameter (selected-frame) 'height
+                             (if (>= emacs-major-version 24)
+                                 66
+                               55))
+      (set-frame-parameter (selected-frame) 'height
+                           (if (>= emacs-major-version 24)
+                               75
+                             64)))))
+
+(after! doom-dashboard
+  (message "post doom-dashboard")
+  (style/left-frame)  ;; Focus new window after splitting
+)
+
+(use-package! browse-kill-ring
+  :config
+  (map! :leader :n "y" #'browse-kill-ring))
 
 (after! org
   (setq
@@ -124,23 +137,28 @@
      ("z" "bugz" entry
       (file+headline "~/org/bugz.org" "bugz!")
       "* ToDo %?
-%a"))))
+%a")))))
+
+(after! org
+  :config
   (setq
-   ;; FIXME: this is not needed???
-   org-babel-load-languages
-   '((emacs-lisp . t)
-     (zsh . t)
-     (haskell . t))
    org-superstar-headline-bullets-list '("⁖")
    org-startup-folded 'overview
    org-support-shift-select t
    org-startup-folded t
    org-insert-heading-respect-content nil)
-
+   org-ellipsis " [...] "
   ;; flyspell off for org mode
-  (remove-hook 'org-mode-hook 'flyspell-mode)
-  (map! :leader "r" #'org-random)
-  (add-hook 'org-babel-after-execute-hook #'display-ansi-colors))
+  (remove-hook 'org-mode-hook 'flyspell-mode))
+
+(map! (:after evil-org
+       :map evil-org-mode-map
+       :n "gk" (cmd! (if (org-on-heading-p)
+                         (org-backward-element)
+                       (evil-previous-visual-line)))
+       :n "gj" (cmd! (if (org-on-heading-p)
+                         (org-forward-element)
+                       (evil-next-visual-line)))))
 
 (after! org
   :config
@@ -163,57 +181,16 @@
           ("refile" ,(list (all-the-icons-material "move_to_inbox" :height 1)) nil nil :ascent center)))
 )
 
-(defun org-random (&optional arg)
-  "Select and goto a random todo item from the global agenda"
-  (interactive "P")
-  (require 'org-agenda)
-  (if (and (stringp arg) (not (string-match "\\S-" arg))) (setq arg nil))
-  (let* ((today (org-today))
-         (date (calendar-gregorian-from-absolute today))
-         (kwds org-todo-keywords-for-agenda)
-         (lucky-entry nil)
-         (completion-ignore-case t)
-         (org-select-this-todo-keyword
-          (if (stringp arg) arg
-            (and arg (integerp arg) (> arg 0)
-                 (nth (1- arg) kwds))))
-         rtn rtnall files file pos marker buffer)
-    (when (equal arg '(4))
-      (setq org-select-this-todo-keyword
-            (org-icompleting-read "Keyword (or KWD1|K2D2|...): "
-                                 (mapcar 'list kwds) nil nil)))
-    (and (equal 0 arg) (setq org-select-this-todo-keyword nil))
-    (catch 'exit
-      (setq files (org-agenda-files)
-            rtnall nil)
-      (while (setq file (pop files))
-        (catch 'nextfile
-          (org-check-agenda-file file)
-          (setq rtn (org-agenda-get-day-entries file date :todo))
-          (setq rtnall (append rtnall rtn))))
-
-      (when rtnall
-        (setq lucky-entry
-              (nth (random
-                    (safe-length
-                     (setq entries rtnall)))
-                   entries))
-
-        (setq marker (or (get-text-property 0 'org-marker lucky-entry)
-                         (org-agenda-error)))
-        (setq buffer (marker-buffer marker))
-        (setq pos (marker-position marker))
-        (org-pop-to-buffer-same-window buffer)
-        (widen)
-        (goto-char pos)
-        (when (derived-mode-p 'org-mode)
-          (org-show-context 'agenda)
-          (save-excursion
-            (and (outline-next-heading)
-                 (org-flag-heading nil))) ; show the next heading
-          (when (outline-invisible-p)
-            (show-entry))               ; display invisible text
-          (run-hooks 'org-agenda-after-show-hook))))))
+(use-package! org-super-links
+  :config
+  (map! :map org-mode-map
+        :localleader
+        (:prefix ("m" . "backlinks")
+         :nvm "l" #'org-super-links-link
+         :nvm "s" #'org-super-links-store-link
+         :nvm "i" #'org-super-links-insert-link
+         :nvm "d" #'org-super-links-delete-link
+         :nvm "c" #'org-super-links-convert-link-to-super)))
 
 (after! org-agenda
   :config
@@ -246,16 +223,6 @@
 
 (map! :leader "oz" #'agenda-z)
 
-(use-package! alert)
-
-;; FIXME: not turning on
-(use-package! org-wild-notifier
-  :defer t
-  :config
-  (add-hook! 'after-init-hook 'org-wild-notifier-mode)
-  (setq ;;org-wild-notifier-alert-time 15
-        alert-default-style (if IS-MAC 'osx-notifier 'libnotify)))
-
 (defun make-qsags ()
  (-let* (((m d y) (calendar-gregorian-from-absolute (+ 6 (org-today))))
            (target-date (format "%d-%02d-%02d" y m d))
@@ -281,23 +248,6 @@
            (:discard (:habit t)
             :name "errors")
           ))))
-
-(after! org
-  (use-package! org-random-todo
-    :defer-incrementally t
-    :commands (org-random-todo-mode
-               org-random-todo
-               org-random-todo-goto-current
-               org-random-todo-goto-new)
-    :config
-    (setq org-random-todo-how-often 1000)
-    (org-random-todo-mode 1))
-
-  (after! alert
-    (alert-add-rule :mode 'org-mode
-                    :category "random-todo"
-                    :style 'osx-notifier
-                    :continue t)))
 
 (defun org-agenda-habit-mode (&optional junk)
   "Toggle showing all habits."
@@ -326,33 +276,18 @@
 
 (use-package! origami)
 
-(use-package! org-cliplink)
-
-(use-package! org-super-links
+(after! org
   :config
-  (map! :map org-mode-map
-        :localleader
-        (:prefix ("m" . "backlinks")
-         :nvm "l" #'org-super-links-link
-         :nvm "s" #'org-super-links-store-link
-         :nvm "i" #'org-super-links-insert-link
-         :nvm "d" #'org-super-links-delete-link
-         :nvm "c" #'org-super-links-convert-link-to-super)))
-
-;; https://emacs.stackexchange.com/questions/44664/apply-ansi-color-escape-sequences-for-org-babel-results
-(defun ek/babel-ansi ()
-  (when-let ((beg (org-babel-where-is-src-block-result nil nil)))
-    (save-excursion
-      (goto-char beg)
-      (when (looking-at org-babel-result-regexp)
-        (let ((end (org-babel-result-end))
-              (ansi-color-context-region nil))
-          (ansi-color-apply-on-region beg end))))))
-
-(defun display-ansi-colors ()
+  (defun display-ansi-colors ()
     (interactive)
     (let ((inhibit-read-only t))
       (ansi-color-apply-on-region (point-min) (point-max))))
+   (add-hook 'org-babel-after-execute-hook #'display-ansi-colors)
+
+   (map! :map org-mode-map
+        "C-c C-'" #'org-yank-into-new-block
+        "C-c C-." #'org-yank-into-new-elisp-block)
+)
 
 (defun org-yank-into-new-elisp-block ()
     (interactive)
@@ -394,136 +329,67 @@
           (deactivate-mark)
           (delete-region begin (point))))))
 
+;; FIXME: not turning on
+(use-package! org-wild-notifier
+  :defer t
+  :config
+  (add-hook! 'after-init-hook 'org-wild-notifier-mode)
+  (setq ;;org-wild-notifier-alert-time 15
+        alert-default-style (if IS-MAC 'osx-notifier 'libnotify)))
+
 (after! org
-  (map! :map org-mode-map
-        "C-c C-'" #'org-yank-into-new-block
-        "C-c C-." #'org-yank-into-new-elisp-block))
+  (use-package! org-random-todo
+    :defer-incrementally t
+    :commands (org-random-todo-mode
+               org-random-todo
+               org-random-todo-goto-current
+               org-random-todo-goto-new)
+    :config
+    (setq org-random-todo-how-often 1000)
+    (org-random-todo-mode 1))
 
-;; style tweaks
-;;
-(defun style/left-frame ()
-  (interactive)
-  (cond
-   ((string-equal system-type "windows-nt") ; Microsoft Windows
-    (progn
-      (set-frame-parameter (selected-frame) 'fullscreen nil)
-      (set-frame-parameter (selected-frame) 'vertical-scroll-bars nil)
-      (set-frame-parameter (selected-frame) 'horizontal-scroll-bars nil)
-      (set-frame-parameter (selected-frame) 'top 10)
-      (set-frame-parameter (selected-frame) 'left 6)
-      (set-frame-parameter (selected-frame) 'height 40)
-      (set-frame-parameter (selected-frame) 'width 120)))
-   ((string-equal system-type "darwin") ; Mac OS X
-    (progn
-      (set-frame-parameter (selected-frame) 'fullscreen nil)
-      (set-frame-parameter (selected-frame) 'vertical-scroll-bars nil)
-      (set-frame-parameter (selected-frame) 'horizontal-scroll-bars nil)
-      (set-frame-parameter (selected-frame) 'top 23)
-      (set-frame-parameter (selected-frame) 'left 0)
-      (set-frame-parameter (selected-frame) 'height 44)
-      (set-frame-parameter (selected-frame) 'width 100)
-      (message "default-frame set")))
-   ((string-equal system-type "gnu/linux") ; linux
-    (progn
-      (message "Linux")))))
+  (after! alert
+    (alert-add-rule :mode 'org-mode
+                    :category "random-todo"
+                    :style 'osx-notifier
+                    :continue t)))
 
-(defun style/right-frame ()
-  (interactive)
-  (cond
-   ((string-equal system-type "windows-nt") ; Microsoft Windows
-    (progn
-      (set-frame-parameter (selected-frame) 'fullscreen nil)
-      (set-frame-parameter (selected-frame) 'vertical-scroll-bars nil)
-      (set-frame-parameter (selected-frame) 'horizontal-scroll-bars nil)
-      (set-frame-parameter (selected-frame) 'top 10)
-      (set-frame-parameter (selected-frame) 'left 2000)
-      (set-frame-parameter (selected-frame) 'height 60)
-      (set-frame-parameter (selected-frame) 'width 120)))
-   ((string-equal system-type "darwin") ; Mac OS X
-    (progn
-      (set-frame-parameter (selected-frame) 'fullscreen nil)
-      (set-frame-parameter (selected-frame) 'vertical-scroll-bars nil)
-      (set-frame-parameter (selected-frame) 'horizontal-scroll-bars nil)
-      (set-frame-parameter (selected-frame) 'top 0)
-      (set-frame-parameter (selected-frame) 'left 707)
-      (set-frame-parameter (selected-frame) 'height 44)
-      (set-frame-parameter (selected-frame) 'width 100)))
-   ((string-equal system-type "gnu/linux") ; linux
-    (progn
-      (message "Linux")))))
-
-(add-to-list 'initial-frame-alist '(top . 23))
-(add-to-list 'initial-frame-alist '(left . 0))
-(add-to-list 'initial-frame-alist '(height . 44))
-(add-to-list 'initial-frame-alist '(width . 100))
-
-(defun style/max-frame ()
-  (interactive)
-  (if t
-      (progn
-        (set-frame-parameter (selected-frame) 'fullscreen 'fullboth)
-        (set-frame-parameter (selected-frame) 'vertical-scroll-bars nil)
-        (set-frame-parameter (selected-frame) 'horizontal-scroll-bars nil))
-    (set-frame-parameter (selected-frame) 'top 26)
-    (set-frame-parameter (selected-frame) 'left 2)
-    (set-frame-parameter (selected-frame) 'width
-                         (floor (/ (float (x-display-pixel-width)) 9.15)))
-    (if (= 1050 (x-display-pixel-height))
-        (set-frame-parameter (selected-frame) 'height
-                             (if (>= emacs-major-version 24)
-                                 66
-                               55))
-      (set-frame-parameter (selected-frame) 'height
-                           (if (>= emacs-major-version 24)
-                               75
-                             64)))))
-
-(after! doom-dashboard
-  (message "post doom-dashboard")
-  (style/left-frame)  ;; Focus new window after splitting
-)
+(after! deft
+  (setq
+   deft-directory "~/org/notes"
+   deft-extensions '("org" "txt" "md")
+   deft-recursive t
+   deft-file-naming-rules
+   (quote
+    ((noslash . "-")
+     (nospace . "-")
+     (case-fn . downcase)))
+   deft-strip-summary-regexp "\\([
+	]\\|^#\\+.+:.*$\\)"
+   delete-by-moving-to-trash nil
+   ))
 
 ;; haskell
 ;;
 (after! haskell
   (setq
    haskell-font-lock-symbols t
+   company-idle-delay nil
    haskell-interactive-popup-errors nil
    lsp-enable-folding nil
    lsp-response-timeout 120
-   company-idle-delay nil
-   lsp-ui-sideline-enable nil           ; not anymore useful than flycheck
-   lsp-ui-doc-enable nil                ; slow and redundant with K
+   lsp-ui-sideline-enable nil
+   lsp-ui-doc-enable nil
    lsp-enable-symbol-highlighting nil
-   ;; If an LSP server isn't present when I start a prog-mode buffer, you
-   ;; don't need to tell me. I know. On some systems I don't care to have a
-   ;; whole development environment for some ecosystems.
    +lsp-prompt-to-install-server 'quiet
-   )
- )
+   lsp-modeline-diagnostics-scope :project
+   lsp-modeline-code-actions-segments '(count icon))
+  (global-so-long-mode -1))
 
-
-;; browse-kill-ring
-(use-package! browse-kill-ring
-  :config
-  (map! :leader :n "y" #'browse-kill-ring))
-
-
-
-(use-package! eshell-info-banner
-:ensure t
-  :defer t
-  :hook (eshell-banner-load . eshell-info-banner-update-banner))
-
-(use-package! wordnut
-  :bind (:map doom-leader-map
-         ("lW" . wordnut-search))
-  :init
-  (after! which-key
-    (add-to-list 'which-key-replacement-alist
-                 '((nil . "wordnut-search") . (nil . "Wordnut search"))))
-  :config
-  (map! :map wordnut-mode-map
-        :nmv "q" #'quit-window))
-
-;;(use-package! org-ql)
+(use-package! tidal
+    :init
+    (progn
+      ;; (setq tidal-interpreter "ghci")
+      ;; (setq tidal-interpreter-arguments (list "ghci" "-XOverloadedStrings" "-package" "tidal"))
+      ;; (setq tidal-boot-script-path "~/.emacs.doom/.local/straight/repos/Tidal/BootTidal.hs")
+      ))

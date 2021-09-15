@@ -50,37 +50,15 @@
 ;; ...Or *all* packages (NOT RECOMMENDED; will likely break things)
 ;(unpin! t)
 
-;; (package! haskell-mode)
-;; (package! lsp-haskell)
-(package! move-text) ;; = M-up = = M-down =
-(package! tidal
-  :recipe (:host github :repo "tidalcycles/Tidal"
-           ))
 (package! browse-kill-ring)
-
+(package! move-text) ;; = M-up = = M-down =
+(package! org-random-todo)
 (package! org-super-agenda)
-
 (package! org-super-links :recipe
   (:host github
    :repo "toshism/org-super-links"
    :branch "develop"))
-
-(package! org-cliplink)
-
-(package! eshell-info-banner :recipe
-  (:host github
-   :repo "phundrak/eshell-info-banner.el"))
-
-(package! wordnut)
-
-(package! org-ql)
-
-(package! org-random-todo)
-
 (package! org-wild-notifier)
-
-(package! alert)
-
-(package! 2048-game)
-
 (package! origami)
+(package! tidal
+  :recipe (:host github :repo "tidalcycles/Tidal"))
