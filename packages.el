@@ -9,9 +9,6 @@
 ;; To install SOME-PACKAGE from MELPA, ELPA or emacsmirror:
 ;(package! some-package)
 
-(package! haskell-mode)
-(package! lsp-haskell)
-(package! move-text) ;; = M-up = = M-down =
 
 ;; To install a package directly from a remote git repo, you must specify a
 ;; `:recipe'. You'll find documentation on what `:recipe' accepts here:
@@ -53,6 +50,37 @@
 ;; ...Or *all* packages (NOT RECOMMENDED; will likely break things)
 ;(unpin! t)
 
+;; (package! haskell-mode)
+;; (package! lsp-haskell)
+(package! move-text) ;; = M-up = = M-down =
 (package! tidal
   :recipe (:host github :repo "tidalcycles/Tidal"
            ))
+(package! browse-kill-ring)
+
+(package! org-super-agenda)
+
+(package! org-super-links :recipe
+  (:host github
+   :repo "toshism/org-super-links"
+   :branch "develop"))
+
+(package! org-cliplink)
+
+(package! eshell-info-banner :recipe
+  (:host github
+   :repo "phundrak/eshell-info-banner.el"))
+
+(package! wordnut)
+
+(package! org-ql)
+
+(package! org-random-todo)
+
+(package! org-wild-notifier)
+
+(package! alert)
+
+(package! 2048-game)
+
+(package! origami)
