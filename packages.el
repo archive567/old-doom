@@ -51,6 +51,7 @@
 ;(unpin! t)
 
 (package! browse-kill-ring)
+(package! keyfreq)
 (package! move-text) ;; = M-up = = M-down =
 (package! org-random-todo)
 (package! org-super-agenda)
@@ -62,3 +63,9 @@
 (package! origami)
 (package! tidal
   :recipe (:host github :repo "tidalcycles/Tidal"))
+(package! corfu :recipe
+  (:host github
+   :repo "minad/corfu"))
+(package! popup-kill-ring)
+(package! discover-my-major)
+;;(package! org-web-tools)

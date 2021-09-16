@@ -27,7 +27,9 @@
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. This is the default:
+;; (setq doom-theme 'doom-oceanic-next)
 (setq doom-theme 'doom-Iosvkem)
+;; (doom-themes-org-config)
 
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
@@ -57,11 +59,15 @@
 (setq evil-split-window-below t
       evil-vsplit-window-right t
       confirm-kill-emacs nil
-      shift-select-mode nil
-      window-combination-resize t)
+      shift-select-mode t
+      window-combination-resize t
+      delete-selection-mode t
+      case-fold-search t
+      auto-save-default t)
 
 ;; setq-default sets variables that are usually local to buffers
-(setq-default truncate-lines nil)
+(setq-default truncate-lines nil
+              indent-tabs-mode nil)
 
 (setq vertico-sort-function #'vertico-sort-history-alpha)
 
@@ -125,6 +131,14 @@
 (use-package! browse-kill-ring
   :config
   (map! :leader :n "y" #'browse-kill-ring))
+
+(use-package! discover-my-major)
+
+(use-package! keyfreq
+  :after-call post-command-hook
+  :config
+  (keyfreq-mode 1)
+  (keyfreq-autosave-mode 1))
 
 (after! org
   (setq
@@ -215,13 +229,25 @@
     (setq org-habit-following-days 2)
     (setq org-habit-preceding-days 20)
     (setq org-log-into-drawer t)
+    (map! :leader "oz" #'agenda-z)
  )
 
 (defun agenda-z ()
   (interactive)
   (org-agenda nil "z"))
 
-(map! :leader "oz" #'agenda-z)
+(defun org-agenda-habit-mode (&optional junk)
+  "Toggle showing all habits."
+  (interactive "P")
+  (setq org-habit-show-all-today (not org-habit-show-all-today))
+  (org-agenda-redo)
+  (message "All habits are %s" (if org-habit-show-all-today "on" "off")))
+
+(after! org-agenda
+  (map! :map org-agenda-mode-map
+        :localleader
+        (:nvm "l" #'org-agenda-log-mode
+         :nvm "h" #'org-agenda-habit-mode)))
 
 (defun make-qsags ()
  (-let* (((m d y) (calendar-gregorian-from-absolute (+ 6 (org-today))))
@@ -248,19 +274,6 @@
            (:discard (:habit t)
             :name "errors")
           ))))
-
-(defun org-agenda-habit-mode (&optional junk)
-  "Toggle showing all habits."
-  (interactive "P")
-  (setq org-habit-show-all-today (not org-habit-show-all-today))
-  (org-agenda-redo)
-  (message "All habits are %s" (if org-habit-show-all-today "on" "off")))
-
-(after! org-agenda
-  (map! :map org-agenda-mode-map
-        :localleader
-        (:nvm "l" #'org-agenda-log-mode
-         :nvm "h" #'org-agenda-habit-mode)))
 
 (use-package! org-super-agenda
   :config
@@ -345,7 +358,7 @@
                org-random-todo-goto-current
                org-random-todo-goto-new)
     :config
-    (setq org-random-todo-how-often 1000)
+    (setq org-random-todo-how-often 6000)
     (org-random-todo-mode 1))
 
   (after! alert
@@ -393,3 +406,22 @@
       ;; (setq tidal-interpreter-arguments (list "ghci" "-XOverloadedStrings" "-package" "tidal"))
       ;; (setq tidal-boot-script-path "~/.emacs.doom/.local/straight/repos/Tidal/BootTidal.hs")
       ))
+
+(use-package! corfu
+  :bind (:map corfu-map
+         ("C-j" . corfu-next)
+         ("C-k" . corfu-previous)
+         ("C-f" . corfu-insert))
+  :custom
+  (corfu-cycle t)
+  :config
+  (corfu-global-mode))
+
+(use-package orderless
+  :init
+  (setq completion-styles '(orderless)
+        completion-category-defaults nil
+        completion-category-overrides '((file (styles . (partial-completion))))))
+
+(use-package popup-kill-ring
+  :bind ("M-y" . popup-kill-ring))
