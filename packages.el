@@ -66,6 +66,15 @@
 (package! corfu :recipe
   (:host github
    :repo "minad/corfu"))
-(package! popup-kill-ring)
 (package! discover-my-major)
+(package! popup-kill-ring)
 ;;(package! org-web-tools)
+
+;;(package! haskell-mode :recipe
+;;  (:host github
+;;   :repo "tonyday567/haskell-mode"
+;;   :branch "removals"))
+
+(package! fd-haskell :recipe
+          (:host github
+           :repo "fakedrake/fd-haskell"))

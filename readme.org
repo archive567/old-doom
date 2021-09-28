@@ -287,7 +287,9 @@ Modern emacs is all about key discovery, and it can be tricky given the multitud
    org-insert-heading-respect-content nil)
    org-ellipsis " [...] "
   ;; flyspell off for org mode
-  (remove-hook 'org-mode-hook 'flyspell-mode))
+  (remove-hook 'org-mode-hook 'flyspell-mode)
+  org-startup-with-inline-images t
+)
  #+end_src
 
 ** org keybinds

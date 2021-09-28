@@ -163,7 +163,9 @@
    org-insert-heading-respect-content nil)
    org-ellipsis " [...] "
   ;; flyspell off for org mode
-  (remove-hook 'org-mode-hook 'flyspell-mode))
+  (remove-hook 'org-mode-hook 'flyspell-mode)
+  org-startup-with-inline-images t
+)
 
 (map! (:after evil-org
        :map evil-org-mode-map
