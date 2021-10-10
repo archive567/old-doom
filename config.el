@@ -185,15 +185,18 @@
                                         ("Next" :foreground "orange red" :weight bold))))
    (setq org-agenda-category-icon-alist
         `(("life" ,(list (all-the-icons-material "home" :height 1)) nil nil :ascent center)
+          ("garden" ,(list (all-the-icons-material "home" :height 1)) nil nil :ascent center)
           ("sys" ,(list (all-the-icons-material "settings" :height 1)) nil nil :ascent center)
           ("bugz" ,(list (all-the-icons-material "flag" :height 1)) nil nil :ascent center)
           ("emacs" ,(list (all-the-icons-material "edit" :height 1)) nil nil :ascent center)
           ("repo" ,(list (all-the-icons-material "ac_unit" :height 1)) nil nil :ascent center)
           ("ib" ,(list (all-the-icons-material "account_balance" :height 1)) nil nil :ascent center)
           ("fe" ,(list (all-the-icons-material "local_atm" :height 1)) nil nil :ascent center)
+          ("auspol" ,(list (all-the-icons-material "format_align_left" :height 1)) nil nil :ascent center)
           ("drafts" ,(list (all-the-icons-material "format_align_left" :height 1)) nil nil :ascent center)
           ("iqfeed" ,(list (all-the-icons-material "account_balance" :height 1)) nil nil :ascent center)
           ("haskell" ,(list (all-the-icons-material "event_available" :height 1)) nil nil :ascent center)
+          ("act" ,(list (all-the-icons-material "event_available" :height 1)) nil nil :ascent center)
           ("refile" ,(list (all-the-icons-material "move_to_inbox" :height 1)) nil nil :ascent center)))
 )
 
@@ -215,6 +218,7 @@
         org-agenda-start-day "-0d"
         org-agenda-files '("~/org" "~/org/notes")
         org-agenda-block-separator nil
+        org-agenda-show-future-repeats nil
         org-agenda-compact-blocks t
         org-agenda-show-all-dates nil
         org-agenda-prefix-format
@@ -267,14 +271,16 @@
             :todo "Blocked")
            (:name "stuff"
             :and (:scheduled nil
-                  :not (:log clock)))
-           (:name "a while"
-            :scheduled (after ,target-date))
-           (:name ""
-            :scheduled t
+                  :not (:log clock))
             :discard (:habit t))
-           (:discard (:habit t)
-            :name "errors")
+           (:name "a while"
+            :scheduled (after ,target-date)
+            :discard (:scheduled t))
+           (:name "scheduled"
+            :scheduled t
+            :discard (:habit t)
+            :order 9)
+           (:name "errors")
           ))))
 
 (use-package! org-super-agenda
@@ -424,6 +430,3 @@
   (setq completion-styles '(orderless)
         completion-category-defaults nil
         completion-category-overrides '((file (styles . (partial-completion))))))
-
-(use-package popup-kill-ring
-  :bind ("M-y" . popup-kill-ring))
