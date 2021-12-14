@@ -41,7 +41,6 @@
 ;; Use `:pin' to specify a particular commit to install.
 ;(package! builtin-package :pin "1a2b3c4d5e")
 
-
 ;; Doom's packages are pinned to a specific commit and updated from release to
 ;; release. The `unpin!' macro allows you to unpin single packages...
 ;(unpin! pinned-package)
@@ -50,8 +49,11 @@
 ;; ...Or *all* packages (NOT RECOMMENDED; will likely break things)
 ;(unpin! t)
 
-(package! browse-kill-ring)
-(package! keyfreq)
+(package! easy-kill)
+(package! elmo :recipe
+  (:host github
+   :repo "karthink/elmo"))
+(package! consult-dir)
 (package! move-text) ;; = M-up = = M-down =
 (package! org-random-todo)
 (package! org-super-agenda)
@@ -63,18 +65,24 @@
 (package! origami)
 (package! tidal
   :recipe (:host github :repo "tidalcycles/Tidal"))
-(package! corfu :recipe
-  (:host github
-   :repo "minad/corfu"))
+;;(package! corfu :recipe
+;;  (:host github
+;;   :repo "minad/corfu"))
 (package! discover-my-major)
-(package! popup-kill-ring)
-;;(package! org-web-tools)
 
 ;;(package! haskell-mode :recipe
 ;;  (:host github
 ;;   :repo "tonyday567/haskell-mode"
 ;;   :branch "removals"))
 
-(package! fd-haskell :recipe
-          (:host github
-           :repo "fakedrake/fd-haskell"))
+(package! haskell-lite
+  :recipe (:local-repo "my/haskell-lite"
+           :build (:not compile)))
+
+(package! fd-haskell
+  :recipe (:local-repo "my/fd-haskell"
+           :build (:not compile)))
+
+;;(package! fd-haskell :recipe
+;;          (:host github
+;;           :repo "fakedrake/fd-haskell"))

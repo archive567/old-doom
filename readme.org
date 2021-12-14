@@ -6,7 +6,7 @@ Most of my doom config, and much of my work flow has been put together from read
 
 A useful technique is to do an advanced github search of these repos, together with the main doom-emacs repository. An example:
 
-[[https://github.com/search?q=org-agenda+repo%3Ahlissner%2Fdoom-emacs+repo%3Ahlissner%2Fdoom-emacs-private+repo%3Afloscr%2Femacs.d+repo%3Adangirsh%2F.doom.d%2F+repo%3ALemonBreezes%2F.doom.d+repo%3Azzamboni%2Fdot-emacs+repo%3Ajethrokuan%2Fdots+repo%3Asachac%2F.emacs.d%2F+repo%3Adaviwil%2Fdotfiles+repo%3Akavin25%2Femacs_config+repo%3Afrap%2Femacs-literate+repo%3AMatthewZMD%2F.emacs.d&type=Code][Example search on "org-agenda"]]
+[[https://github.com/search?q=embark-act+repo%3Ahlissner%2Fdoom-emacs+repo%3Ahlissner%2Fdoom-emacs-private+repo%3Afloscr%2Femacs.d+repo%3Adangirsh%2F.doom.d%2F+repo%3ALemonBreezes%2F.doom.d+repo%3Azzamboni%2Fdot-emacs+repo%3Ajethrokuan%2Fdots+repo%3Asachac%2F.emacs.d%2F+repo%3Adaviwil%2Fdotfiles+repo%3Afrap%2Femacs-literate+repo%3AMatthewZMD%2F.emacs.d+repo%3Akarthink%2F.emacs.d&type=Code][Example search on "embark-act"]]
 
 ** YouTube
 
@@ -26,6 +26,8 @@ A useful technique is to do an advanced github search of these repos, together w
 
 [[https://github.com/hlissner/doom-emacs-private][GitHub - hlissner/doom-emacs-private: My private module for Doom Emacs]]
 
+[[https://github.com/tecosaur/emacs-config/][GitHub - tecosaur/emacs-config: My configuration for Doom Emacs]]
+
 ** from scratch'ish
 
 [[https://zzamboni.org/post/my-emacs-configuration-with-commentary/][zzamboni.org | My Emacs Configuration, With Commentary]]
@@ -36,11 +38,15 @@ A useful technique is to do an advanced github search of these repos, together w
 
 [[https://github.com/daviwil/dotfiles][GitHub - daviwil/dotfiles: The path to GNUrvana
 ]]
-[[https://github.com/kavin25/emacs_config/blob/master/Emacs.org][emacs_config/Emacs.org at master · kavin25/emacs_config · GitHub]]
-
 [[https://github.com/frap/emacs-literate][GitHub - frap/emacs-literate: Literate emacs config file]]
 
 [[https://github.com/MatthewZMD/.emacs.d][GitHub - MatthewZMD/.emacs.d: M-EMACS, a full-featured GNU Emacs configuratio...]]
+
+[[https://github.com/karthink/.emacs.d][GitHub - karthink/.emacs.d: My personal emacs settings]]
+
+** gitlab
+
+https://protesilaos.com/emacs/dotemacs
 
 ** haskell'ish
 
@@ -129,13 +135,42 @@ Global configuration, including standard doom library tweaks.
       case-fold-search t
       auto-save-default t)
 
+(setq search-whitespace-regexp ".*"
+      isearch-lax-whitespace t
+      isearch-regexp-lax-whitespace nil)
+
 ;; setq-default sets variables that are usually local to buffers
 (setq-default truncate-lines nil
               indent-tabs-mode nil)
 
+;; replaces just-one-space
+(map! "M-SPC" #'cycle-spacing
+      "M-o" #'delete-blank-lines)
 #+end_src
 
-#+RESULTS:
+** evil
+
+#+begin_src elisp
+(map!
+ (:map 'override
+   :v "v" #'er/expand-region
+   :v "V" #'er/contract-region))
+(map!
+ (:map 'override
+   :m "j" #'evil-next-visual-line
+   :m "k" #'evil-previous-visual-line))
+#+end_src
+
+#+begin_src elisp
+(setq evil-want-fine-undo t
+      evil-kill-on-visual-paste nil
+      evil-want-C-u-scroll nil
+      evil-want-C-u-delete nil
+      evil-want-integration t
+      evil-want-keybinding nil)
+#+end_src
+
+
 
 ** standard library tweaks
 
@@ -143,8 +178,19 @@ Global configuration, including standard doom library tweaks.
 (setq vertico-sort-function #'vertico-sort-history-alpha)
 #+end_src
 
-#+RESULTS:
-: vertico-sort-history-alpha
+
+#+begin_src elisp
+(map! :leader "s f" #'consult-find)
+(map! :leader "s y" #'consult-yank-from-kill-ring)
+#+end_src
+
+#+begin_src elisp
+(use-package orderless
+  :init
+  (setq completion-styles '(orderless)
+        completion-category-defaults nil
+        completion-category-overrides '((file (styles . (partial-completion))))))
+#+end_src
 
 ** Post-dashboard tweak to increase frame.
 
@@ -209,18 +255,9 @@ Global configuration, including standard doom library tweaks.
 
 #+RESULTS:
 
-** kill-ring
+* Keys
 
-#+begin_src elisp
-(use-package! browse-kill-ring
-  :config
-  (map! :leader :n "y" #'browse-kill-ring))
-#+end_src
-
-#+RESULTS:
-: t
-
-* Key Detection
+** Key Detection
 
 Modern emacs is all about key discovery, and it can be tricky given the multitude of maps, modes and states that can (co-)exist. This is my heirarchy:
 
@@ -234,6 +271,12 @@ Modern emacs is all about key discovery, and it can be tricky given the multitud
 - Look for a module in [[https://github.com/emacs-evil/evil-collection][GitHub - emacs-evil/evil-collection: A set of keybindings for evil-mode]]. This package provides evil defaults for a variety of modes/packages.
 - Use ~discover-my-major~
 
+** global keybindings
+
+#+begin_src elisp
+(map! "M-o" #'other-window)
+#+end_src
+
 ** discover-my-major
 
 [[https://github.com/jguenther/discover-my-major][GitHub - jguenther/discover-my-major: Discover key bindings and their meaning...]]
@@ -242,15 +285,6 @@ Modern emacs is all about key discovery, and it can be tricky given the multitud
 (use-package! discover-my-major)
 #+end_src
 
-** key-freq
-
-#+begin_src elisp
-(use-package! keyfreq
-  :after-call post-command-hook
-  :config
-  (keyfreq-mode 1)
-  (keyfreq-autosave-mode 1))
-#+end_src
 * Org
 ** org-capture
 
@@ -284,11 +318,12 @@ Modern emacs is all about key discovery, and it can be tricky given the multitud
    org-startup-folded 'overview
    org-support-shift-select t
    org-startup-folded t
-   org-insert-heading-respect-content nil)
+   org-insert-heading-respect-content nil
    org-ellipsis " [...] "
-  ;; flyspell off for org mode
-  (remove-hook 'org-mode-hook 'flyspell-mode)
-  org-startup-with-inline-images t
+   org-startup-with-inline-images t
+   org-cycle-include-plain-lists 'integrate)
+   ;; flyspell off for org mode
+   (remove-hook 'org-mode-hook 'flyspell-mode)
 )
  #+end_src
 
@@ -352,7 +387,7 @@ Modern emacs is all about key discovery, and it can be tricky given the multitud
 
 ** org-super-links
 
-For me ~org-roam~ gets too far away from life in plain text.  90% of the benefit is backlin ks, which org-super-links provides.
+~org-roam~ gets too far away from life in plain text.  90% of the benefit is backlinks, which org-super-links provides.
 
 [[https://github.com/toshism/org-super-links][GitHub - toshism/org-super-links: Package to create links with auto backlinks]]
 
@@ -526,6 +561,44 @@ For me ~org-roam~ gets too far away from life in plain text.  90% of the benefit
 
 #+end_src
 
+** hugo
+
+docs: [[https://ox-hugo.scripter.co/][ox-hugo - Org to Hugo exporter]]
+
+~backtrace~ bug:
+https://github.com/hlissner/doom-emacs/issues/5721#issuecomment-958342837
+
+Setup is section-based. To add a post:
+
+- add export_file_name to the properties.
+#+begin_quote
+:PROPERTIES:
+:EXPORT_FILE_NAME: test2
+:END:
+#+end_quote
+
+- add auto save at the bottom of the file:
+
+  #+begin_quote
+ * Locals
+
+# Local Variables:
+# eval: (org-hugo-auto-export-mode)
+# End:
+#+end_quote
+
+A ToDo in the header makes the post a draft.
+
+#+begin_src elisp
+(after! org
+  :config
+  (use-package backtrace)
+  (setq org-hugo-base-dir "~/site"
+        org-hugo-auto-set-lastmod t
+        org-hugo-use-code-for-kbd t
+        org-hugo-date-format "%Y-%m-%d"))
+#+end_src
+
 * Alerts
 ** OSX notifications
 
@@ -601,7 +674,10 @@ For me ~org-roam~ gets too far away from life in plain text.  90% of the benefit
    ))
 #+end_src
 
-* Haskell & lsp
+* haskell & lsp
+:BACKLINKS:
+[2021-11-21 Sun 07:55] <- [[file:~/org/haskell-lite.org][file:~/org/haskell-lite.org]]
+:END:
 
 #+begin_src elisp
 ;; haskell
@@ -609,17 +685,99 @@ For me ~org-roam~ gets too far away from life in plain text.  90% of the benefit
 (after! haskell
   (setq
    haskell-font-lock-symbols t
-   company-idle-delay nil
-   haskell-interactive-popup-errors nil
+   ;; company-idle-delay 0.5
+   haskell-interactive-popup-errors t
    lsp-enable-folding nil
    lsp-response-timeout 120
-   lsp-ui-sideline-enable nil
-   lsp-ui-doc-enable nil
-   lsp-enable-symbol-highlighting nil
-   +lsp-prompt-to-install-server 'quiet
+   ;; lsp-ui-sideline-enable nil
+   ;; lsp-ui-doc-enable nil
+   ;; lsp-enable-symbol-highlighting nil
+   ;; +lsp-prompt-to-install-server 'quiet
    lsp-modeline-diagnostics-scope :project
-   lsp-modeline-code-actions-segments '(count icon))
-  (global-so-long-mode -1))
+   ;; lsp-modeline-code-actions-segments '(count icon)
+   flycheck-check-syntax-automatically '(save)
+   lsp-haskell-brittany-on nil
+   lsp-haskell-floskell-on nil
+   lsp-haskell-fourmolu-on nil
+   lsp-haskell-stylish-haskell-on nil
+   lsp-haskell-retrie-on nil
+   ;; lsp-completion-provider :none
+   )
+  (global-so-long-mode -1)
+  ;; makes underscore an alphanumeric
+  (add-hook! 'haskell-mode-hook (modify-syntax-entry ?_ "w")))
+#+end_src
+
+#+begin_src elisp
+(after! haskell
+  (use-package! fd-haskell
+    :config
+     (setq haskell-shell-buffer-name "haskell")
+     (setq haskell-shell-interpreter '("cabal" "repl"))
+     (setq haskell-shell-interpreter-args '())
+    )
+  (add-hook! 'haskell-mode-hook 'fd-haskell-mode))
+#+end_src
+
+#+begin_src elisp
+(after! haskell
+  (map! :localleader
+        :map haskell-mode-map
+        "n" #'flycheck-next-error))
+#+end_src
+
+#+begin_src elisp
+(after! haskell
+  (use-package! haskell-lite
+    :config
+    (map! :localleader
+        :map haskell-mode-map
+        (:prefix ("l" . "lite")
+         :nvm "s" #'haskell-lite-repl-start
+         :nvm "q" #'haskell-lite-repl-quit
+         :nvm "r" #'haskell-lite-repl-show
+         :nvm "l" #'haskell-lite-repl-load-file
+         :nvm "o" #'haskell-lite-repl-overlay
+         :nvm "c" #'haskell-comint-clear-buffer
+         :nvm "k" #'haskell-comint-restart)
+    )))
+#+end_src
+
+#+begin_src elisp
+(map!
+  :after company
+  :map company-active-map
+  "RET" nil
+  "<return>" nil
+  "<tab>" #'company-complete-selection
+  "TAB" #'company-complete-selection)
+(setq tab-always-indent 'complete)
+#+end_src
+
+#+begin_src elisp
+(after! haskell
+      (sp-with-modes '(haskell-mode haskell-interactive-mode)
+        (sp-local-pair "{-" "-}" :actions :rem)
+        (sp-local-pair "{-#" "#-}" :actions :rem)
+        (sp-local-pair "{-@" "@-}" :actions :rem)
+        (sp-local-pair "{-" "-")
+        (sp-local-pair "{-#" "#-")
+        (sp-local-pair "{-@" "@-")))
+#+end_src
+
+from [[https://magnus.therning.org/2021-03-05-000-flycheck-and-hls.html][Flycheck and HLS
+]]
+#+begin_src elisp
+(with-eval-after-load 'lsp-mode
+  (defun lsp-next-checker-haskell ()
+    (flycheck-add-next-checker 'lsp '(warning . haskell-hlint)))
+  (add-hook 'lsp-after-open-hook
+            #'lsp-next-checker-haskell))
+#+end_src
+
+#+begin_src elisp :tangle no
+(flycheck-add-next-checker 'lsp '(info . haskell-hlint))
+(flycheck-add-next-checker 'lsp '(info . haskell-ghc))
 #+end_src
 
 ** Tidal
@@ -645,14 +803,13 @@ s.reboot
 #+end_src
 
 * Experimental
-** ToDo corfu
+** corfu
 
 [[https://github.com/minad/corfu][GitHub - minad/corfu: corfu.el - Completion Overlay Region FUnction]]
 
 ~company~ replacement?
 
-
-#+begin_src elisp
+#+begin_src elisp :tangle no
 (use-package! corfu
   :bind (:map corfu-map
          ("C-j" . corfu-next)
@@ -660,63 +817,65 @@ s.reboot
          ("C-f" . corfu-insert))
   :custom
   (corfu-cycle t)
+  (corfu-auto t)
   :config
   (corfu-global-mode))
 #+end_src
 
 [[https://www.youtube.com/c/SystemCrafters/videos][System Crafters - YouTube]]
 
-** ToDo orderless
+** elmo
 
-~orderless~ seems to already be in Doom.
+Elmo turns embark into an incremental completion system.
 
-[[https://github.com/oantolin/orderless][GitHub - oantolin/orderless: Emacs completion style that matches multiple reg...]]
+Vertico needs to be turned off for this to be sensible.
+
+[[https://github.com/karthink/elmo][GitHub - karthink/elmo: Embark Live MOde for Emacs]]
+
+Do not use elmo: [[https://karthinks.com/software/elmo-embark-live-mode-for-emacs/][ELMO - Embark Live Mode for Emacs | Karthinks]]
+
+
 
 #+begin_src elisp
-(use-package orderless
-  :init
-  (setq completion-styles '(orderless)
-        completion-category-defaults nil
-        completion-category-overrides '((file (styles . (partial-completion))))))
-#+end_src
-
-* Not Installed
-
-Notes and config on packages I might try one day.
-
-** wordnut
-[[https://github.com/gromnitsky/wordnut][GitHub - gromnitsky/wordnut: Emacs major mode interface to WordNet lexical da...]]
-
-[[https://wordnet.princeton.edu/][WordNet | A Lexical Database for English]]
-
-~SPC l W~
-
-#+begin_src elisp :tangle no
-(use-package! wordnut
-  :bind (:map doom-leader-map
-         ("lW" . wordnut-search))
-  :init
-  (after! which-key
-    (add-to-list 'which-key-replacement-alist
-                 '((nil . "wordnut-search") . (nil . "Wordnut search"))))
+(use-package elmo
   :config
-  (map! :map wordnut-mode-map
-        :nmv "q" #'quit-window))
+  (map! :leader :desc "elmo" "te" #'elmo-toggle)
+)
+
+(defun elmo-toggle ()
+  (interactive)
+  (if elmo-mode
+      (progn
+        (elmo-mode -1)
+        (vertico-mode 1)
+        (message "elmo-mode disabled"))
+    (progn
+      (elmo-mode 1)
+      (vertico-mode -1)
+      (message "elmo-mode enabled"))))
 #+end_src
 
-** org-static-blog
+#+RESULTS:
+: elmo
 
-[[https://github.com/bastibe/org-static-blog][GitHub - bastibe/org-static-blog: A static site generator using org-mode]]
+** easy-kill
 
-An alternative to ~(org +hugo)~.
+[[https://github.com/leoliu/easy-kill][GitHub - leoliu/easy-kill: Kill & Mark Things Easily in Emacs]]
 
+#+begin_src elisp
+(use-package easy-kill
+  :config
+  (map! "M-w" #'easy-kill)
+)
+#+end_src
 
-** org-web-tools
+** consult-dir
 
-[[https://github.com/alphapapa/org-web-tools][GitHub - alphapapa/org-web-tools: View, capture, and archive Web pages in Org...]]
-
-Needs ~cabal install pandoc~
-
-#+begin_src elisp :tangle no
-(use-package! org-web-tools)
+#+begin_src elisp
+(use-package consult-dir
+  :ensure t
+  :bind (("C-x C-d" . consult-dir)
+         :map vertico-map
+         ("C-x C-d" . consult-dir)
+         ("C-x C-j" . consult-dir-jump-file)))
 #+end_src

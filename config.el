@@ -65,11 +65,44 @@
       case-fold-search t
       auto-save-default t)
 
+(setq search-whitespace-regexp ".*"
+      isearch-lax-whitespace t
+      isearch-regexp-lax-whitespace nil)
+
 ;; setq-default sets variables that are usually local to buffers
 (setq-default truncate-lines nil
               indent-tabs-mode nil)
 
+;; replaces just-one-space
+(map! "M-SPC" #'cycle-spacing
+      "M-o" #'delete-blank-lines)
+
+(map!
+ (:map 'override
+   :v "v" #'er/expand-region
+   :v "V" #'er/contract-region))
+(map!
+ (:map 'override
+   :m "j" #'evil-next-visual-line
+   :m "k" #'evil-previous-visual-line))
+
+(setq evil-want-fine-undo t
+      evil-kill-on-visual-paste nil
+      evil-want-C-u-scroll nil
+      evil-want-C-u-delete nil
+      evil-want-integration t
+      evil-want-keybinding nil)
+
 (setq vertico-sort-function #'vertico-sort-history-alpha)
+
+(map! :leader "s f" #'consult-find)
+(map! :leader "s y" #'consult-yank-from-kill-ring)
+
+(use-package orderless
+  :init
+  (setq completion-styles '(orderless)
+        completion-category-defaults nil
+        completion-category-overrides '((file (styles . (partial-completion))))))
 
 (defun style/left-frame ()
   (interactive)
@@ -128,17 +161,9 @@
   (style/left-frame)  ;; Focus new window after splitting
 )
 
-(use-package! browse-kill-ring
-  :config
-  (map! :leader :n "y" #'browse-kill-ring))
+(map! "M-o" #'other-window)
 
 (use-package! discover-my-major)
-
-(use-package! keyfreq
-  :after-call post-command-hook
-  :config
-  (keyfreq-mode 1)
-  (keyfreq-autosave-mode 1))
 
 (after! org
   (setq
@@ -160,11 +185,12 @@
    org-startup-folded 'overview
    org-support-shift-select t
    org-startup-folded t
-   org-insert-heading-respect-content nil)
+   org-insert-heading-respect-content nil
    org-ellipsis " [...] "
-  ;; flyspell off for org mode
-  (remove-hook 'org-mode-hook 'flyspell-mode)
-  org-startup-with-inline-images t
+   org-startup-with-inline-images t
+   org-cycle-include-plain-lists 'integrate)
+   ;; flyspell off for org mode
+   (remove-hook 'org-mode-hook 'flyspell-mode)
 )
 
 (map! (:after evil-org
@@ -350,6 +376,14 @@
           (deactivate-mark)
           (delete-region begin (point))))))
 
+(after! org
+  :config
+  (use-package backtrace)
+  (setq org-hugo-base-dir "~/site"
+        org-hugo-auto-set-lastmod t
+        org-hugo-use-code-for-kbd t
+        org-hugo-date-format "%Y-%m-%d"))
+
 ;; FIXME: not turning on
 (use-package! org-wild-notifier
   :defer t
@@ -395,17 +429,80 @@
 (after! haskell
   (setq
    haskell-font-lock-symbols t
-   company-idle-delay nil
-   haskell-interactive-popup-errors nil
+   ;; company-idle-delay 0.5
+   haskell-interactive-popup-errors t
    lsp-enable-folding nil
    lsp-response-timeout 120
-   lsp-ui-sideline-enable nil
-   lsp-ui-doc-enable nil
-   lsp-enable-symbol-highlighting nil
-   +lsp-prompt-to-install-server 'quiet
+   ;; lsp-ui-sideline-enable nil
+   ;; lsp-ui-doc-enable nil
+   ;; lsp-enable-symbol-highlighting nil
+   ;; +lsp-prompt-to-install-server 'quiet
    lsp-modeline-diagnostics-scope :project
-   lsp-modeline-code-actions-segments '(count icon))
-  (global-so-long-mode -1))
+   ;; lsp-modeline-code-actions-segments '(count icon)
+   flycheck-check-syntax-automatically '(save)
+   lsp-haskell-brittany-on nil
+   lsp-haskell-floskell-on nil
+   lsp-haskell-fourmolu-on nil
+   lsp-haskell-stylish-haskell-on nil
+   lsp-haskell-retrie-on nil
+   ;; lsp-completion-provider :none
+   )
+  (global-so-long-mode -1)
+  ;; makes underscore an alphanumeric
+  (add-hook! 'haskell-mode-hook (modify-syntax-entry ?_ "w")))
+
+(after! haskell
+  (use-package! fd-haskell
+    :config
+     (setq haskell-shell-buffer-name "haskell")
+     (setq haskell-shell-interpreter '("cabal" "repl"))
+     (setq haskell-shell-interpreter-args '())
+    )
+  (add-hook! 'haskell-mode-hook 'fd-haskell-mode))
+
+(after! haskell
+  (map! :localleader
+        :map haskell-mode-map
+        "n" #'flycheck-next-error))
+
+(after! haskell
+  (use-package! haskell-lite
+    :config
+    (map! :localleader
+        :map haskell-mode-map
+        (:prefix ("l" . "lite")
+         :nvm "s" #'haskell-lite-repl-start
+         :nvm "q" #'haskell-lite-repl-quit
+         :nvm "r" #'haskell-lite-repl-show
+         :nvm "l" #'haskell-lite-repl-load-file
+         :nvm "o" #'haskell-lite-repl-overlay
+         :nvm "c" #'haskell-comint-clear-buffer
+         :nvm "k" #'haskell-comint-restart)
+    )))
+
+(map!
+  :after company
+  :map company-active-map
+  "RET" nil
+  "<return>" nil
+  "<tab>" #'company-complete-selection
+  "TAB" #'company-complete-selection)
+(setq tab-always-indent 'complete)
+
+(after! haskell
+      (sp-with-modes '(haskell-mode haskell-interactive-mode)
+        (sp-local-pair "{-" "-}" :actions :rem)
+        (sp-local-pair "{-#" "#-}" :actions :rem)
+        (sp-local-pair "{-@" "@-}" :actions :rem)
+        (sp-local-pair "{-" "-")
+        (sp-local-pair "{-#" "#-")
+        (sp-local-pair "{-@" "@-")))
+
+(with-eval-after-load 'lsp-mode
+  (defun lsp-next-checker-haskell ()
+    (flycheck-add-next-checker 'lsp '(warning . haskell-hlint)))
+  (add-hook 'lsp-after-open-hook
+            #'lsp-next-checker-haskell))
 
 (use-package! tidal
     :init
@@ -415,18 +512,31 @@
       ;; (setq tidal-boot-script-path "~/.emacs.doom/.local/straight/repos/Tidal/BootTidal.hs")
       ))
 
-(use-package! corfu
-  :bind (:map corfu-map
-         ("C-j" . corfu-next)
-         ("C-k" . corfu-previous)
-         ("C-f" . corfu-insert))
-  :custom
-  (corfu-cycle t)
+(use-package elmo
   :config
-  (corfu-global-mode))
+  (map! :leader :desc "elmo" "te" #'elmo-toggle)
+)
 
-(use-package orderless
-  :init
-  (setq completion-styles '(orderless)
-        completion-category-defaults nil
-        completion-category-overrides '((file (styles . (partial-completion))))))
+(defun elmo-toggle ()
+  (interactive)
+  (if elmo-mode
+      (progn
+        (elmo-mode -1)
+        (vertico-mode 1)
+        (message "elmo-mode disabled"))
+    (progn
+      (elmo-mode 1)
+      (vertico-mode -1)
+      (message "elmo-mode enabled"))))
+
+(use-package easy-kill
+  :config
+  (map! "M-w" #'easy-kill)
+)
+
+(use-package consult-dir
+  :ensure t
+  :bind (("C-x C-d" . consult-dir)
+         :map vertico-map
+         ("C-x C-d" . consult-dir)
+         ("C-x C-j" . consult-dir-jump-file)))
