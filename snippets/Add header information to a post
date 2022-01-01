@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: hugopost
+# key: hpost
+# --
+:PROPERTIES:
+:EXPORT_FILE_NAME: $0
+:export_date: $1
+:END:

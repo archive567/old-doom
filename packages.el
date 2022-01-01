@@ -65,24 +65,25 @@
 (package! origami)
 (package! tidal
   :recipe (:host github :repo "tidalcycles/Tidal"))
-;;(package! corfu :recipe
-;;  (:host github
-;;   :repo "minad/corfu"))
+
+(package! fd-haskell :recipe
+  (:host github
+   :repo "tonyday567/fd-haskell"
+   :branch "fixes"))
+
+(package! haskell-lite :recipe
+  (:host github
+   :repo "tonyday567/haskell-lite"
+   :branch "main"))
+
+(package! corfu :recipe
+  (:host github
+   :repo "minad/corfu"))
+
+(package! cape :recipe
+  (:host github
+   :repo "minad/cape"))
+
 (package! discover-my-major)
 
-;;(package! haskell-mode :recipe
-;;  (:host github
-;;   :repo "tonyday567/haskell-mode"
-;;   :branch "removals"))
-
-(package! haskell-lite
-  :recipe (:local-repo "my/haskell-lite"
-           :build (:not compile)))
-
-(package! fd-haskell
-  :recipe (:local-repo "my/fd-haskell"
-           :build (:not compile)))
-
-;;(package! fd-haskell :recipe
-;;          (:host github
-;;           :repo "fakedrake/fd-haskell"))
+(package! org-ql)

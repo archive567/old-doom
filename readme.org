@@ -143,9 +143,6 @@ Global configuration, including standard doom library tweaks.
 (setq-default truncate-lines nil
               indent-tabs-mode nil)
 
-;; replaces just-one-space
-(map! "M-SPC" #'cycle-spacing
-      "M-o" #'delete-blank-lines)
 #+end_src
 
 ** evil
@@ -170,14 +167,11 @@ Global configuration, including standard doom library tweaks.
       evil-want-keybinding nil)
 #+end_src
 
-
-
 ** standard library tweaks
 
 #+begin_src elisp
 (setq vertico-sort-function #'vertico-sort-history-alpha)
 #+end_src
-
 
 #+begin_src elisp
 (map! :leader "s f" #'consult-find)
@@ -257,12 +251,11 @@ Global configuration, including standard doom library tweaks.
 
 * Keys
 
-** Key Detection
+** Key Detection Checklist
 
-Modern emacs is all about key discovery, and it can be tricky given the multitude of maps, modes and states that can (co-)exist. This is my heirarchy:
-
-- inspect the key with ~SPC h k~
-- inspect the keymap with ~SPC h v~ followed by the name of the keymap. Try =feature-mode-map= and =evil-feature-mode-map=
+- inspect the key with ~SPC h k~. Look for which keymaps are binding.
+- inspect the keymap with ~SPC h v~.
+- unbind any existing map with (map! :map xyz-map :inv #'command nil)
 - look in module docs (~SPC h d m~)
   - custom keybinds for in the module, such as ~:lang org~.
   - general keybinds for evil in the ~:editor evil~ module
@@ -274,7 +267,15 @@ Modern emacs is all about key discovery, and it can be tricky given the multitud
 ** global keybindings
 
 #+begin_src elisp
-(map! "M-o" #'other-window)
+;; replaces just-one-space
+(map! "M-SPC" #'cycle-spacing)
+(map! :map global-map "M-j" #'avy-goto-char-timer)
+#+end_src
+
+#+begin_src elisp
+(map! (:after evil-org
+       :map evil-org-mode-map
+       :inv "M-j" nil))
 #+end_src
 
 ** discover-my-major
@@ -286,6 +287,16 @@ Modern emacs is all about key discovery, and it can be tricky given the multitud
 #+end_src
 
 * Org
+:BACKLINKS:
+[2021-12-30 Thu 14:15] <- [[file:~/org/stuff.org::*stack revival][stack revival]]
+:END:
+
+** org-ql
+
+#+begin_src elisp
+(use-package! org-ql)
+#+end_src
+
 ** org-capture
 
 #+begin_src elisp
@@ -297,6 +308,10 @@ Modern emacs is all about key discovery, and it can be tricky given the multitud
       (file "~/org/refile.org")
       "* ToDo %?
 ")
+     ("s" "stack" checkitem
+      (file+headline "~/org/stuff.org" "stack")
+      "- %?
+  %a" :prepend t)
      ("z" "bugz" entry
       (file+headline "~/org/bugz.org" "bugz!")
       "* ToDo %?
@@ -317,7 +332,6 @@ Modern emacs is all about key discovery, and it can be tricky given the multitud
    org-superstar-headline-bullets-list '("⁖")
    org-startup-folded 'overview
    org-support-shift-select t
-   org-startup-folded t
    org-insert-heading-respect-content nil
    org-ellipsis " [...] "
    org-startup-with-inline-images t
@@ -387,9 +401,13 @@ Modern emacs is all about key discovery, and it can be tricky given the multitud
 
 ** org-super-links
 
+[[file:~/org/emacs.org::*backlinks][backlinks]]
+
 ~org-roam~ gets too far away from life in plain text.  90% of the benefit is backlinks, which org-super-links provides.
 
 [[https://github.com/toshism/org-super-links][GitHub - toshism/org-super-links: Package to create links with auto backlinks]]
+
+In an org file, a capture automatically generates a super-link, so ~SPC m m i~ would insert a backlink in the item.
 
 ~SPC m m l~
 
@@ -407,6 +425,25 @@ Modern emacs is all about key discovery, and it can be tricky given the multitud
 #+end_src
 
 ** org-agenda
+:BACKLINKS:
+[2021-12-30 Thu 14:11] <- [[file:~/org/refile.org::*categories for the agenda][categories for the agenda]]
+:END:
+
+*** org-agenda-files
+
+Keeping a manual list to avoid using customize.
+
+#+begin_src elisp
+(after! org-agenda
+  :config
+  (setq org-agenda-files
+   '("~/org"
+     "/Users/tonyday/haskell/color-adjust/readme.org"
+     "/Users/tonyday/.doom.d/readme.org"
+     "/Users/tonyday/haskell/perf/readme.org")))
+#+end_src
+
+*** customs
 
 #+begin_src elisp
 (after! org-agenda
@@ -414,7 +451,6 @@ Modern emacs is all about key discovery, and it can be tricky given the multitud
   (setq org-agenda-span 'week
         org-agenda-use-time-grid nil
         org-agenda-start-day "-0d"
-        org-agenda-files '("~/org" "~/org/notes")
         org-agenda-block-separator nil
         org-agenda-show-future-repeats nil
         org-agenda-compact-blocks t
@@ -423,18 +459,18 @@ Modern emacs is all about key discovery, and it can be tricky given the multitud
          '((agenda . " %i %-12t")
            (todo . " %i %-12:c")
            (tags . " %i %-12:c")
-           (search . " %i %-12:c"))))
-
-(after! org-agenda
-  :config
-    (add-to-list 'org-modules 'org-habit)
-    (require 'org-habit)
-    (setq org-habit-graph-column 32)
-    (setq org-habit-following-days 2)
-    (setq org-habit-preceding-days 20)
-    (setq org-log-into-drawer t)
-    (map! :leader "oz" #'agenda-z)
- )
+           (search . " %i %-12:c")))
+  (add-to-list 'org-modules 'org-habit)
+  (require 'org-habit)
+  (setq org-habit-graph-column 32)
+  (setq org-habit-following-days 2)
+  (setq org-habit-preceding-days 20)
+  (setq org-log-into-drawer t)
+  (map! :leader "oz" #'agenda-z)
+  (map! :map org-agenda-mode-map
+        :localleader
+        (:nvm "l" #'org-agenda-log-mode
+         :nvm "h" #'org-agenda-habit-mode)))
 
 (defun agenda-z ()
   (interactive)
@@ -446,12 +482,6 @@ Modern emacs is all about key discovery, and it can be tricky given the multitud
   (setq org-habit-show-all-today (not org-habit-show-all-today))
   (org-agenda-redo)
   (message "All habits are %s" (if org-habit-show-all-today "on" "off")))
-
-(after! org-agenda
-  (map! :map org-agenda-mode-map
-        :localleader
-        (:nvm "l" #'org-agenda-log-mode
-         :nvm "h" #'org-agenda-habit-mode)))
 
 #+end_src
 
@@ -475,6 +505,26 @@ Modern emacs is all about key discovery, and it can be tricky given the multitud
             :category "refile")
            (:name "blocked"
             :todo "Blocked")
+           (:name "fun"
+            :and (:scheduled nil
+                  :not (:log clock)
+                  :tag ("fun"))
+            :discard (:habit t))
+           (:name "lemon"
+            :and (:scheduled nil
+                  :not (:log clock)
+                  :tag ("lemon"))
+            :discard (:habit t))
+           (:name "site"
+            :and (:scheduled nil
+                  :not (:log clock)
+                  :tag ("site"))
+            :discard (:habit t))
+           (:name "reading"
+            :and (:scheduled nil
+                  :not (:log clock)
+                  :tag ("reading"))
+            :discard (:habit t))
            (:name "stuff"
             :and (:scheduled nil
                   :not (:log clock))
@@ -491,6 +541,12 @@ Modern emacs is all about key discovery, and it can be tricky given the multitud
 
 (use-package! org-super-agenda
   :config
+   (use-package origami
+    :bind (:map org-super-agenda-header-map
+            ("<tab>" . origami-toggle-node)
+            ("j" . evil-next-visual-line)
+            ("k" . evil-previous-visual-line))
+    :hook ((org-agenda-mode . origami-mode)))
    (make-qsags)
    (org-super-agenda-mode 1)
    (setq org-agenda-custom-commands
@@ -500,8 +556,6 @@ Modern emacs is all about key discovery, and it can be tricky given the multitud
                          (org-agenda-overriding-header "")))
              (alltodo "" ((org-agenda-overriding-header "")
                           )))))))
-
-(use-package! origami)
 #+end_src
 
 ** babel
@@ -596,7 +650,10 @@ A ToDo in the header makes the post a draft.
   (setq org-hugo-base-dir "~/site"
         org-hugo-auto-set-lastmod t
         org-hugo-use-code-for-kbd t
-        org-hugo-date-format "%Y-%m-%d"))
+        org-hugo-date-format "%Y-%m-%d")
+    (map! :map org-mode-map
+        :localleader
+        (:nvm "lp" #'org-hugo-export-wim-to-md)))
 #+end_src
 
 * Alerts
@@ -645,7 +702,7 @@ A ToDo in the header makes the post a draft.
                org-random-todo-goto-current
                org-random-todo-goto-new)
     :config
-    (setq org-random-todo-how-often 6000)
+    (setq org-random-todo-how-often 60000)
     (org-random-todo-mode 1))
 
   (after! alert
@@ -686,7 +743,7 @@ A ToDo in the header makes the post a draft.
   (setq
    haskell-font-lock-symbols t
    ;; company-idle-delay 0.5
-   haskell-interactive-popup-errors t
+   haskell-interactive-popup-errors nil
    lsp-enable-folding nil
    lsp-response-timeout 120
    ;; lsp-ui-sideline-enable nil
@@ -702,6 +759,10 @@ A ToDo in the header makes the post a draft.
    lsp-haskell-stylish-haskell-on nil
    lsp-haskell-retrie-on nil
    ;; lsp-completion-provider :none
+   haskell-process-show-debug-tips nil
+   haskell-process-suggest-remove-import-lines nil
+   haskell-process-suggest-restart nil
+   haskell-process-type 'stack-ghci
    )
   (global-so-long-mode -1)
   ;; makes underscore an alphanumeric
@@ -710,37 +771,9 @@ A ToDo in the header makes the post a draft.
 
 #+begin_src elisp
 (after! haskell
-  (use-package! fd-haskell
-    :config
-     (setq haskell-shell-buffer-name "haskell")
-     (setq haskell-shell-interpreter '("cabal" "repl"))
-     (setq haskell-shell-interpreter-args '())
-    )
-  (add-hook! 'haskell-mode-hook 'fd-haskell-mode))
-#+end_src
-
-#+begin_src elisp
-(after! haskell
   (map! :localleader
         :map haskell-mode-map
         "n" #'flycheck-next-error))
-#+end_src
-
-#+begin_src elisp
-(after! haskell
-  (use-package! haskell-lite
-    :config
-    (map! :localleader
-        :map haskell-mode-map
-        (:prefix ("l" . "lite")
-         :nvm "s" #'haskell-lite-repl-start
-         :nvm "q" #'haskell-lite-repl-quit
-         :nvm "r" #'haskell-lite-repl-show
-         :nvm "l" #'haskell-lite-repl-load-file
-         :nvm "o" #'haskell-lite-repl-overlay
-         :nvm "c" #'haskell-comint-clear-buffer
-         :nvm "k" #'haskell-comint-restart)
-    )))
 #+end_src
 
 #+begin_src elisp
@@ -780,6 +813,16 @@ from [[https://magnus.therning.org/2021-03-05-000-flycheck-and-hls.html][Flychec
 (flycheck-add-next-checker 'lsp '(info . haskell-ghc))
 #+end_src
 
+** haskell-lite
+
+#+begin_src elisp
+(use-package! fd-haskell)
+#+end_src
+
+#+begin_src elisp
+(use-package! haskell-lite)
+#+end_src
+
 ** Tidal
 
 ~cabal install tidal --lib~ is the magical incantation.
@@ -803,28 +846,60 @@ s.reboot
 #+end_src
 
 * Experimental
-** corfu
+** corfu (on)
+
+To actually use corfu, first turn company-mode off, then turn corfu-mode on.
 
 [[https://github.com/minad/corfu][GitHub - minad/corfu: corfu.el - Completion Overlay Region FUnction]]
 
-~company~ replacement?
-
-#+begin_src elisp :tangle no
+#+begin_src elisp
 (use-package! corfu
+  :config
+  ;;(corfu-global-mode)
+  (setq corfu-auto t))
+
+(use-package! cape
+  ;; Bind dedicated completion commands
+  :bind (("C-c p p" . completion-at-point) ;; capf
+         ("C-c p t" . complete-tag)        ;; etags
+         ("C-c p d" . cape-dabbrev)        ;; or dabbrev-completion
+         ("C-c p f" . cape-file)
+         ("C-c p k" . cape-keyword)
+         ("C-c p s" . cape-symbol)
+         ("C-c p a" . cape-abbrev)
+         ("C-c p i" . cape-ispell)
+         ("C-c p l" . cape-line)
+         ("C-c p w" . cape-dict)
+         ("C-c p \\" . cape-tex)
+         ("C-c p &" . cape-sgml)
+         ("C-c p r" . cape-rfc1345))
+  :init
+  ;; Add `completion-at-point-functions', used by `completion-at-point'.
+  (add-to-list 'completion-at-point-functions #'cape-file)
+  (add-to-list 'completion-at-point-functions #'cape-tex)
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  (add-to-list 'completion-at-point-functions #'cape-keyword)
+  ;;(add-to-list 'completion-at-point-functions #'cape-sgml)
+  ;;(add-to-list 'completion-at-point-functions #'cape-rfc1345)
+  ;;(add-to-list 'completion-at-point-functions #'cape-abbrev)
+  (add-to-list 'completion-at-point-functions #'cape-ispell)
+  ;;(add-to-list 'completion-at-point-functions #'cape-dict)
+  ;;(add-to-list 'completion-at-point-functions #'cape-symbol)
+  ;;(add-to-list 'completion-at-point-functions #'cape-line)
+)
+
+
+#+end_src
+
   :bind (:map corfu-map
          ("C-j" . corfu-next)
          ("C-k" . corfu-previous)
          ("C-f" . corfu-insert))
-  :custom
-  (corfu-cycle t)
-  (corfu-auto t)
-  :config
-  (corfu-global-mode))
-#+end_src
+
 
 [[https://www.youtube.com/c/SystemCrafters/videos][System Crafters - YouTube]]
 
-** elmo
+** elmo (on)
 
 Elmo turns embark into an incremental completion system.
 
@@ -858,7 +933,7 @@ Do not use elmo: [[https://karthinks.com/software/elmo-embark-live-mode-for-emac
 #+RESULTS:
 : elmo
 
-** easy-kill
+** easy-kill (on)
 
 [[https://github.com/leoliu/easy-kill][GitHub - leoliu/easy-kill: Kill & Mark Things Easily in Emacs]]
 
@@ -869,7 +944,7 @@ Do not use elmo: [[https://karthinks.com/software/elmo-embark-live-mode-for-emac
 )
 #+end_src
 
-** consult-dir
+** consult-dir (on)
 
 #+begin_src elisp
 (use-package consult-dir
@@ -878,4 +953,21 @@ Do not use elmo: [[https://karthinks.com/software/elmo-embark-live-mode-for-emac
          :map vertico-map
          ("C-x C-d" . consult-dir)
          ("C-x C-j" . consult-dir-jump-file)))
+#+end_src
+
+** avy embark (on)
+
+#+begin_src elisp
+
+(use-package! avy)
+(defun avy-action-embark (pt)
+  (unwind-protect
+      (save-excursion
+        (goto-char pt)
+        (embark-act))
+    (select-window
+     (cdr (ring-ref avy-ring 0))))
+  t)
+
+(setf (alist-get ?. avy-dispatch-alist) 'avy-action-embark)
 #+end_src

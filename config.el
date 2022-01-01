@@ -73,10 +73,6 @@
 (setq-default truncate-lines nil
               indent-tabs-mode nil)
 
-;; replaces just-one-space
-(map! "M-SPC" #'cycle-spacing
-      "M-o" #'delete-blank-lines)
-
 (map!
  (:map 'override
    :v "v" #'er/expand-region
@@ -161,9 +157,17 @@
   (style/left-frame)  ;; Focus new window after splitting
 )
 
-(map! "M-o" #'other-window)
+;; replaces just-one-space
+(map! "M-SPC" #'cycle-spacing)
+(map! :map global-map "M-j" #'avy-goto-char-timer)
+
+(map! (:after evil-org
+       :map evil-org-mode-map
+       :inv "M-j" nil))
 
 (use-package! discover-my-major)
+
+(use-package! org-ql)
 
 (after! org
   (setq
@@ -173,6 +177,10 @@
       (file "~/org/refile.org")
       "* ToDo %?
 ")
+     ("s" "stack" checkitem
+      (file+headline "~/org/stuff.org" "stack")
+      "- %?
+  %a" :prepend t)
      ("z" "bugz" entry
       (file+headline "~/org/bugz.org" "bugz!")
       "* ToDo %?
@@ -184,7 +192,6 @@
    org-superstar-headline-bullets-list '("⁖")
    org-startup-folded 'overview
    org-support-shift-select t
-   org-startup-folded t
    org-insert-heading-respect-content nil
    org-ellipsis " [...] "
    org-startup-with-inline-images t
@@ -239,10 +246,17 @@
 
 (after! org-agenda
   :config
+  (setq org-agenda-files
+   '("~/org"
+     "/Users/tonyday/haskell/color-adjust/readme.org"
+     "/Users/tonyday/.doom.d/readme.org"
+     "/Users/tonyday/haskell/perf/readme.org")))
+
+(after! org-agenda
+  :config
   (setq org-agenda-span 'week
         org-agenda-use-time-grid nil
         org-agenda-start-day "-0d"
-        org-agenda-files '("~/org" "~/org/notes")
         org-agenda-block-separator nil
         org-agenda-show-future-repeats nil
         org-agenda-compact-blocks t
@@ -251,18 +265,18 @@
          '((agenda . " %i %-12t")
            (todo . " %i %-12:c")
            (tags . " %i %-12:c")
-           (search . " %i %-12:c"))))
-
-(after! org-agenda
-  :config
-    (add-to-list 'org-modules 'org-habit)
-    (require 'org-habit)
-    (setq org-habit-graph-column 32)
-    (setq org-habit-following-days 2)
-    (setq org-habit-preceding-days 20)
-    (setq org-log-into-drawer t)
-    (map! :leader "oz" #'agenda-z)
- )
+           (search . " %i %-12:c")))
+  (add-to-list 'org-modules 'org-habit)
+  (require 'org-habit)
+  (setq org-habit-graph-column 32)
+  (setq org-habit-following-days 2)
+  (setq org-habit-preceding-days 20)
+  (setq org-log-into-drawer t)
+  (map! :leader "oz" #'agenda-z)
+  (map! :map org-agenda-mode-map
+        :localleader
+        (:nvm "l" #'org-agenda-log-mode
+         :nvm "h" #'org-agenda-habit-mode)))
 
 (defun agenda-z ()
   (interactive)
@@ -274,12 +288,6 @@
   (setq org-habit-show-all-today (not org-habit-show-all-today))
   (org-agenda-redo)
   (message "All habits are %s" (if org-habit-show-all-today "on" "off")))
-
-(after! org-agenda
-  (map! :map org-agenda-mode-map
-        :localleader
-        (:nvm "l" #'org-agenda-log-mode
-         :nvm "h" #'org-agenda-habit-mode)))
 
 (defun make-qsags ()
  (-let* (((m d y) (calendar-gregorian-from-absolute (+ 6 (org-today))))
@@ -295,6 +303,26 @@
             :category "refile")
            (:name "blocked"
             :todo "Blocked")
+           (:name "fun"
+            :and (:scheduled nil
+                  :not (:log clock)
+                  :tag ("fun"))
+            :discard (:habit t))
+           (:name "lemon"
+            :and (:scheduled nil
+                  :not (:log clock)
+                  :tag ("lemon"))
+            :discard (:habit t))
+           (:name "site"
+            :and (:scheduled nil
+                  :not (:log clock)
+                  :tag ("site"))
+            :discard (:habit t))
+           (:name "reading"
+            :and (:scheduled nil
+                  :not (:log clock)
+                  :tag ("reading"))
+            :discard (:habit t))
            (:name "stuff"
             :and (:scheduled nil
                   :not (:log clock))
@@ -311,6 +339,12 @@
 
 (use-package! org-super-agenda
   :config
+   (use-package origami
+    :bind (:map org-super-agenda-header-map
+            ("<tab>" . origami-toggle-node)
+            ("j" . evil-next-visual-line)
+            ("k" . evil-previous-visual-line))
+    :hook ((org-agenda-mode . origami-mode)))
    (make-qsags)
    (org-super-agenda-mode 1)
    (setq org-agenda-custom-commands
@@ -320,8 +354,6 @@
                          (org-agenda-overriding-header "")))
              (alltodo "" ((org-agenda-overriding-header "")
                           )))))))
-
-(use-package! origami)
 
 (after! org
   :config
@@ -382,7 +414,10 @@
   (setq org-hugo-base-dir "~/site"
         org-hugo-auto-set-lastmod t
         org-hugo-use-code-for-kbd t
-        org-hugo-date-format "%Y-%m-%d"))
+        org-hugo-date-format "%Y-%m-%d")
+    (map! :map org-mode-map
+        :localleader
+        (:nvm "lp" #'org-hugo-export-wim-to-md)))
 
 ;; FIXME: not turning on
 (use-package! org-wild-notifier
@@ -400,7 +435,7 @@
                org-random-todo-goto-current
                org-random-todo-goto-new)
     :config
-    (setq org-random-todo-how-often 6000)
+    (setq org-random-todo-how-often 60000)
     (org-random-todo-mode 1))
 
   (after! alert
@@ -430,7 +465,7 @@
   (setq
    haskell-font-lock-symbols t
    ;; company-idle-delay 0.5
-   haskell-interactive-popup-errors t
+   haskell-interactive-popup-errors nil
    lsp-enable-folding nil
    lsp-response-timeout 120
    ;; lsp-ui-sideline-enable nil
@@ -446,39 +481,19 @@
    lsp-haskell-stylish-haskell-on nil
    lsp-haskell-retrie-on nil
    ;; lsp-completion-provider :none
+   haskell-process-show-debug-tips nil
+   haskell-process-suggest-remove-import-lines nil
+   haskell-process-suggest-restart nil
+   haskell-process-type 'stack-ghci
    )
   (global-so-long-mode -1)
   ;; makes underscore an alphanumeric
   (add-hook! 'haskell-mode-hook (modify-syntax-entry ?_ "w")))
 
 (after! haskell
-  (use-package! fd-haskell
-    :config
-     (setq haskell-shell-buffer-name "haskell")
-     (setq haskell-shell-interpreter '("cabal" "repl"))
-     (setq haskell-shell-interpreter-args '())
-    )
-  (add-hook! 'haskell-mode-hook 'fd-haskell-mode))
-
-(after! haskell
   (map! :localleader
         :map haskell-mode-map
         "n" #'flycheck-next-error))
-
-(after! haskell
-  (use-package! haskell-lite
-    :config
-    (map! :localleader
-        :map haskell-mode-map
-        (:prefix ("l" . "lite")
-         :nvm "s" #'haskell-lite-repl-start
-         :nvm "q" #'haskell-lite-repl-quit
-         :nvm "r" #'haskell-lite-repl-show
-         :nvm "l" #'haskell-lite-repl-load-file
-         :nvm "o" #'haskell-lite-repl-overlay
-         :nvm "c" #'haskell-comint-clear-buffer
-         :nvm "k" #'haskell-comint-restart)
-    )))
 
 (map!
   :after company
@@ -504,6 +519,10 @@
   (add-hook 'lsp-after-open-hook
             #'lsp-next-checker-haskell))
 
+(use-package! fd-haskell)
+
+(use-package! haskell-lite)
+
 (use-package! tidal
     :init
     (progn
@@ -511,6 +530,41 @@
       ;; (setq tidal-interpreter-arguments (list "ghci" "-XOverloadedStrings" "-package" "tidal"))
       ;; (setq tidal-boot-script-path "~/.emacs.doom/.local/straight/repos/Tidal/BootTidal.hs")
       ))
+
+(use-package! corfu
+  :config
+  ;;(corfu-global-mode)
+  (setq corfu-auto t))
+
+(use-package! cape
+  ;; Bind dedicated completion commands
+  :bind (("C-c p p" . completion-at-point) ;; capf
+         ("C-c p t" . complete-tag)        ;; etags
+         ("C-c p d" . cape-dabbrev)        ;; or dabbrev-completion
+         ("C-c p f" . cape-file)
+         ("C-c p k" . cape-keyword)
+         ("C-c p s" . cape-symbol)
+         ("C-c p a" . cape-abbrev)
+         ("C-c p i" . cape-ispell)
+         ("C-c p l" . cape-line)
+         ("C-c p w" . cape-dict)
+         ("C-c p \\" . cape-tex)
+         ("C-c p &" . cape-sgml)
+         ("C-c p r" . cape-rfc1345))
+  :init
+  ;; Add `completion-at-point-functions', used by `completion-at-point'.
+  (add-to-list 'completion-at-point-functions #'cape-file)
+  (add-to-list 'completion-at-point-functions #'cape-tex)
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  (add-to-list 'completion-at-point-functions #'cape-keyword)
+  ;;(add-to-list 'completion-at-point-functions #'cape-sgml)
+  ;;(add-to-list 'completion-at-point-functions #'cape-rfc1345)
+  ;;(add-to-list 'completion-at-point-functions #'cape-abbrev)
+  (add-to-list 'completion-at-point-functions #'cape-ispell)
+  ;;(add-to-list 'completion-at-point-functions #'cape-dict)
+  ;;(add-to-list 'completion-at-point-functions #'cape-symbol)
+  ;;(add-to-list 'completion-at-point-functions #'cape-line)
+)
 
 (use-package elmo
   :config
@@ -540,3 +594,15 @@
          :map vertico-map
          ("C-x C-d" . consult-dir)
          ("C-x C-j" . consult-dir-jump-file)))
+
+(use-package! avy)
+(defun avy-action-embark (pt)
+  (unwind-protect
+      (save-excursion
+        (goto-char pt)
+        (embark-act))
+    (select-window
+     (cdr (ring-ref avy-ring 0))))
+  t)
+
+(setf (alist-get ?. avy-dispatch-alist) 'avy-action-embark)
