@@ -167,8 +167,6 @@
 
 (use-package! discover-my-major)
 
-(use-package! org-ql)
-
 (after! org
   (setq
    org-capture-templates
@@ -195,7 +193,9 @@
    org-insert-heading-respect-content nil
    org-ellipsis " [...] "
    org-startup-with-inline-images t
-   org-cycle-include-plain-lists 'integrate)
+   org-cycle-include-plain-lists 'integrate
+   ;; https://github.com/syl20bnr/spacemacs/issues/13465
+   org-src-tab-acts-natively nil)
    ;; flyspell off for org mode
    (remove-hook 'org-mode-hook 'flyspell-mode)
 )
@@ -211,7 +211,7 @@
 
 (after! org
   :config
-   (setq-default org-todo-keywords '((sequence "ToDo(t)" "Next(n)" "Blocked(b@)" "|" "Done(d!)")))
+   (setq-default org-todo-keywords '((sequence "ToDo(t)" "Next(n)" "Blocked(b)" "|" "Done(d!)")))
    (setq org-todo-keyword-faces (quote (("ToDo" :foreground "#2E2E8B8B5757" :weight bold)
                                         ("Done" :foreground "black" :weight bold)
                                         ("Blocked" :foreground "yellow4" :weight bold)
@@ -247,10 +247,7 @@
 (after! org-agenda
   :config
   (setq org-agenda-files
-   '("~/org"
-     "/Users/tonyday/haskell/color-adjust/readme.org"
-     "/Users/tonyday/.doom.d/readme.org"
-     "/Users/tonyday/haskell/perf/readme.org")))
+   '("~/org")))
 
 (after! org-agenda
   :config
@@ -262,10 +259,10 @@
         org-agenda-compact-blocks t
         org-agenda-show-all-dates nil
         org-agenda-prefix-format
-         '((agenda . " %i %-12t")
-           (todo . " %i %-12:c")
-           (tags . " %i %-12:c")
-           (search . " %i %-12:c")))
+         '((agenda . " %-12t")
+           (todo . " %-12:c")
+           (tags . " %-12:c")
+           (search . " %-12:c")))
   (add-to-list 'org-modules 'org-habit)
   (require 'org-habit)
   (setq org-habit-graph-column 32)
@@ -325,7 +322,8 @@
             :discard (:habit t))
            (:name "stuff"
             :and (:scheduled nil
-                  :not (:log clock))
+                  :not (:log clock)
+                  :not (:tag ("ignore")))
             :discard (:habit t))
            (:name "a while"
             :scheduled (after ,target-date)
@@ -366,9 +364,17 @@
    (map! :map org-mode-map
         "C-c C-'" #'org-yank-into-new-block
         "C-c C-." #'org-yank-into-new-elisp-block)
-)
 
-(defun org-yank-into-new-elisp-block ()
+   (map! :map org-mode-map
+         :localleader
+         (:prefix ("z" . "yank to block")
+          :nvm "b" #'org-yank-into-new-block
+          :nvm "e" #'org-yank-into-new-block-elisp
+          :nvm "s" #'org-yank-into-new-block-sh
+          :nvm "h" #'org-yank-into-new-block-haskell
+          :nvm "q" #'org-yank-into-new-quote)))
+
+(defun org-yank-into-new-block (&optional template)
     (interactive)
     (let ((begin (point))
           done)
@@ -378,7 +384,9 @@
             (yank)
             (push-mark begin)
             (setq mark-active t)
-            (org-insert-structure-template "src elisp")
+            (if template
+             (org-insert-structure-template template)
+             (call-interactively #'org-insert-structure-template))
             (setq done t)
             (deactivate-mark)
             (let ((case-fold-search t))
@@ -388,25 +396,21 @@
           (deactivate-mark)
           (delete-region begin (point))))))
 
-(defun org-yank-into-new-block ()
-    (interactive)
-    (let ((begin (point))
-          done)
-      (unwind-protect
-          (progn
-            (end-of-line)
-            (yank)
-            (push-mark begin)
-            (setq mark-active t)
-            (call-interactively #'org-insert-structure-template)
-            (setq done t)
-            (deactivate-mark)
-            (let ((case-fold-search t))
-              (re-search-forward (rx bol "#+END_")))
-            (forward-line 1))
-        (unless done
-          (deactivate-mark)
-          (delete-region begin (point))))))
+(defun org-yank-into-new-block-elisp ()
+  (interactive)
+  (org-yank-into-new-block "src elisp"))
+
+(defun org-yank-into-new-block-sh ()
+  (interactive)
+  (org-yank-into-new-block "src sh"))
+
+(defun org-yank-into-new-block-haskell ()
+  (interactive)
+  (org-yank-into-new-block "src haskell"))
+
+(defun org-yank-into-new-quote ()
+  (interactive)
+  (org-yank-into-new-block "quote"))
 
 (after! org
   :config
@@ -419,7 +423,6 @@
         :localleader
         (:nvm "lp" #'org-hugo-export-wim-to-md)))
 
-;; FIXME: not turning on
 (use-package! org-wild-notifier
   :defer t
   :config
@@ -446,7 +449,7 @@
 
 (after! deft
   (setq
-   deft-directory "~/org/notes"
+   deft-directory "~/org"
    deft-extensions '("org" "txt" "md")
    deft-recursive t
    deft-file-naming-rules
@@ -469,7 +472,7 @@
    lsp-enable-folding nil
    lsp-response-timeout 120
    ;; lsp-ui-sideline-enable nil
-   ;; lsp-ui-doc-enable nil
+   lsp-ui-doc-enable nil
    ;; lsp-enable-symbol-highlighting nil
    ;; +lsp-prompt-to-install-server 'quiet
    lsp-modeline-diagnostics-scope :project
@@ -484,7 +487,8 @@
    haskell-process-show-debug-tips nil
    haskell-process-suggest-remove-import-lines nil
    haskell-process-suggest-restart nil
-   haskell-process-type 'stack-ghci
+   ;;haskell-process-type 'stack-ghci
+   haskell-process-type 'cabal-repl
    )
   (global-so-long-mode -1)
   ;; makes underscore an alphanumeric
@@ -493,7 +497,8 @@
 (after! haskell
   (map! :localleader
         :map haskell-mode-map
-        "n" #'flycheck-next-error))
+        "n" #'flycheck-next-error
+        "p" #'flycheck-previous-error))
 
 (map!
   :after company
@@ -530,6 +535,9 @@
       ;; (setq tidal-interpreter-arguments (list "ghci" "-XOverloadedStrings" "-package" "tidal"))
       ;; (setq tidal-boot-script-path "~/.emacs.doom/.local/straight/repos/Tidal/BootTidal.hs")
       ))
+
+(use-package! haskell-snippets
+  :after (haskell-mode yasnippet))
 
 (use-package! corfu
   :config

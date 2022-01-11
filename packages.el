@@ -85,5 +85,4 @@
    :repo "minad/cape"))
 
 (package! discover-my-major)
-
-(package! org-ql)
+(package! haskell-snippets)
