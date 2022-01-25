@@ -164,8 +164,54 @@ Global configuration, including standard doom library tweaks.
       evil-want-C-u-scroll nil
       evil-want-C-u-delete nil
       evil-want-integration t
-      evil-want-keybinding nil)
+      evil-want-keybinding nil
+      evil-move-cursor-back nil
+      evil-move-beyond-eol t
+      evil-highlight-closing-paren-at-point-states nil)
 #+end_src
+
+#+begin_src elisp
+(defun evil-forward-after-end (thing &optional count)
+  "Move forward to end of THING.
+The motion is repeated COUNT times."
+  (setq count (or count 1))
+  (cond
+   ((> count 0)
+    (forward-thing thing count))
+   (t
+    (unless (bobp) (forward-char -1))
+    (let ((bnd (bounds-of-thing-at-point thing))
+          rest)
+      (when bnd
+        (cond
+         ((< (point) (cdr bnd)) (goto-char (car bnd)))
+         ((= (point) (cdr bnd)) (cl-incf count))))
+      (condition-case nil
+          (when (zerop
+                 (setq rest
+                       (forward-thing thing count)))
+            (end-of-thing thing))
+        (error))
+      rest))))
+
+(evil-define-motion evil-forward-after-word-end (count &optional bigword)
+  "Move the cursor to the end of the COUNT-th next word.
+If BIGWORD is non-nil, move by WORDS."
+  :type inclusive
+  (let ((thing (if bigword 'evil-WORD 'evil-word))
+        (count (or count 1)))
+    (evil-signal-at-bob-or-eob count)
+    (evil-forward-after-end thing count)))
+
+(evil-define-motion evil-forward-after-WORD-end (count)
+  "Move the cursor to the end of the COUNT-th next WORD."
+  :type inclusive
+  (evil-forward-after-word-end count t))
+
+(evil-define-key 'motion 'global "e"  #'evil-forward-after-word-end)
+(evil-define-key 'motion 'global "E"  #'evil-forward-after-WORD-end)
+#+end_src
+
 
 ** standard library tweaks
 
