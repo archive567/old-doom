@@ -133,6 +133,7 @@ If BIGWORD is non-nil, move by WORDS."
 (evil-define-key 'motion 'global "E"  #'evil-forward-after-WORD-end)
 
 (setq vertico-sort-function #'vertico-sort-history-alpha)
+(setq avy-all-windows t)
 
 (map! :leader "s f" #'consult-find)
 (map! :leader "s y" #'consult-yank-from-kill-ring)
@@ -142,6 +143,31 @@ If BIGWORD is non-nil, move by WORDS."
   (setq completion-styles '(orderless)
         completion-category-defaults nil
         completion-category-overrides '((file (styles . (partial-completion))))))
+
+(define-key isearch-mode-map (kbd "M-j") 'avy-isearch)
+
+(defun isearch-forward-other-window (prefix)
+    "Function to isearch-forward in other-window."
+    (interactive "P")
+    (unless (one-window-p)
+      (save-excursion
+        (let ((next (if prefix -1 1)))
+          (other-window next)
+          (isearch-forward)
+          (other-window (- next))))))
+
+(defun isearch-backward-other-window (prefix)
+  "Function to isearch-backward in other-window."
+  (interactive "P")
+  (unless (one-window-p)
+    (save-excursion
+      (let ((next (if prefix 1 -1)))
+        (other-window next)
+        (isearch-backward)
+        (other-window (- next))))))
+
+(define-key global-map (kbd "C-M-s") 'isearch-forward-other-window)
+(define-key global-map (kbd "C-M-r") 'isearch-backward-other-window)
 
 (defun style/left-frame ()
   (interactive)
@@ -363,6 +389,12 @@ If BIGWORD is non-nil, move by WORDS."
                   :not (:log clock)
                   :tag ("reading"))
             :discard (:habit t))
+           (:name "repo"
+            :and (:scheduled nil
+                  :not (:log clock)
+                  :tag ("repo"))
+            :discard (:habit t))
+
            (:name "stuff"
             :and (:scheduled nil
                   :not (:log clock)
@@ -657,3 +689,5 @@ If BIGWORD is non-nil, move by WORDS."
   t)
 
 (setf (alist-get ?. avy-dispatch-alist) 'avy-action-embark)
+
+(setq org-latex-packages-alist '(("" "tikz-cd" t) ("" "tikz" t)))

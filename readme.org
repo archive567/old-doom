@@ -117,8 +117,6 @@ As per default doom config.el.
 
 #+end_src
 
-#+RESULTS:
-
 * Global tweaks
 
 Global configuration, including standard doom library tweaks.
@@ -212,11 +210,11 @@ If BIGWORD is non-nil, move by WORDS."
 (evil-define-key 'motion 'global "E"  #'evil-forward-after-WORD-end)
 #+end_src
 
-
 ** standard library tweaks
 
 #+begin_src elisp
 (setq vertico-sort-function #'vertico-sort-history-alpha)
+(setq avy-all-windows t)
 #+end_src
 
 #+begin_src elisp
@@ -231,6 +229,35 @@ If BIGWORD is non-nil, move by WORDS."
         completion-category-defaults nil
         completion-category-overrides '((file (styles . (partial-completion))))))
 #+end_src
+
+
+#+begin_src elisp
+(define-key isearch-mode-map (kbd "M-j") 'avy-isearch)
+
+(defun isearch-forward-other-window (prefix)
+    "Function to isearch-forward in other-window."
+    (interactive "P")
+    (unless (one-window-p)
+      (save-excursion
+        (let ((next (if prefix -1 1)))
+          (other-window next)
+          (isearch-forward)
+          (other-window (- next))))))
+
+(defun isearch-backward-other-window (prefix)
+  "Function to isearch-backward in other-window."
+  (interactive "P")
+  (unless (one-window-p)
+    (save-excursion
+      (let ((next (if prefix 1 -1)))
+        (other-window next)
+        (isearch-backward)
+        (other-window (- next))))))
+
+(define-key global-map (kbd "C-M-s") 'isearch-forward-other-window)
+(define-key global-map (kbd "C-M-r") 'isearch-backward-other-window)
+#+end_src
+
 
 ** Post-dashboard tweak to increase frame.
 
@@ -564,6 +591,12 @@ Keeping a manual list to avoid using customize.
                   :not (:log clock)
                   :tag ("reading"))
             :discard (:habit t))
+           (:name "repo"
+            :and (:scheduled nil
+                  :not (:log clock)
+                  :tag ("repo"))
+            :discard (:habit t))
+
            (:name "stuff"
             :and (:scheduled nil
                   :not (:log clock)
@@ -1023,4 +1056,11 @@ Do not use elmo: [[https://karthinks.com/software/elmo-embark-live-mode-for-emac
   t)
 
 (setf (alist-get ?. avy-dispatch-alist) 'avy-action-embark)
+#+end_src
+
+
+** latex
+
+#+begin_src elisp
+(setq org-latex-packages-alist '(("" "tikz-cd" t) ("" "tikz" t)))
 #+end_src
