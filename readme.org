@@ -879,7 +879,7 @@ A ToDo in the header makes the post a draft.
 
 from [[https://magnus.therning.org/2021-03-05-000-flycheck-and-hls.html][Flycheck and HLS
 ]]
-#+begin_src elisp
+#+begin_src elisp :tangle no
 (with-eval-after-load 'lsp-mode
   (defun lsp-next-checker-haskell ()
     (flycheck-add-next-checker 'lsp '(warning . haskell-hlint)))

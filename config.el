@@ -593,12 +593,6 @@ If BIGWORD is non-nil, move by WORDS."
         (sp-local-pair "{-#" "#-")
         (sp-local-pair "{-@" "@-")))
 
-(with-eval-after-load 'lsp-mode
-  (defun lsp-next-checker-haskell ()
-    (flycheck-add-next-checker 'lsp '(warning . haskell-hlint)))
-  (add-hook 'lsp-after-open-hook
-            #'lsp-next-checker-haskell))
-
 (use-package! fd-haskell)
 
 (use-package! haskell-lite)
