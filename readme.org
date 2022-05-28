@@ -1,5 +1,31 @@
 #+TITLE: Doom Emacs Configuration
 
+
+* Non-standard binding summary
+
+| key             | command                      |
+|-----------------+------------------------------|
+| ~v~ ~V~         | expands and contracts region |
+| ~SPC s f~       | consult-find                 |
+| ~SPC s y~       | consult-yank-from-kill-ring  |
+| ~M-SPC~         | cycle-spacing                |
+| ~M-j~           | avy-goto-char-timer          |
+|                 |                              |
+| ~gk~ ~gj~       | up and down an org header    |
+| ~SPC m m i~     | insert a backlink            |
+| ~SPC m m l~     | org-super-links-link         |
+| ~SPC m z~       | yank to block commands       |
+| ~SPC m l p~     | org-hugo-export-wim-to-md    |
+| ~SPC m n~       | flycheck-next-error          |
+| ~SPC m p~       | flycheck-previous-error      |
+| ~M-w~           | easy-kill                    |
+| ~C-x C-d~       | consult-dir                  |
+| ~M-up~ ~M-down~ | Move line up/down            |
+| ~C-;~           | embark-act                   |
+|                 |                              |
+| ~SPC t m~       | style/max-frame              |
+| ~SPC t d~       | style/default-frame          |
+
 * Configuration Examples
 
 Most of my doom config, and much of my work flow has been put together from reading and stealing from other configs.
@@ -51,6 +77,27 @@ https://protesilaos.com/emacs/dotemacs
 ** haskell'ish
 
 [[https://blog.sumtypeofway.com/posts/emacs-config.html][adventures in uncertainty: My Emacs Configuration]]
+
+* Development
+
+** map!
+
+See practical map! usage here:
+
+[[https://github.com/hlissner/doom-emacs/blob/develop/modules/config/default/+evil-bindings.el][doom-emacs/+evil-bindings.el at develop · hlissner/doom-emacs · GitHub]]
+
+** Key Detection Checklist
+
+- inspect the key with ~SPC h k~. Look for which keymaps are binding.
+- inspect the keymap with ~SPC h v~.
+- unbind any existing map with (map! :map xyz-map :inv #'command nil)
+- look in module docs (~SPC h d m~)
+  - custom keybinds for in the module, such as ~:lang org~.
+  - general keybinds for evil in the ~:editor evil~ module
+  - doom's "best default" keybinds in ~:config default~
+  - module plugins lists to see if we have an evil package for it.
+- Look for a module in [[https://github.com/emacs-evil/evil-collection][GitHub - emacs-evil/evil-collection: A set of keybindings for evil-mode]]. This package provides evil defaults for a variety of modes/packages.
+- Use ~discover-my-major~
 
 * Front Matter
 
@@ -258,7 +305,6 @@ If BIGWORD is non-nil, move by WORDS."
 (define-key global-map (kbd "C-M-r") 'isearch-backward-other-window)
 #+end_src
 
-
 ** Post-dashboard tweak to increase frame.
 
 #+begin_src elisp
@@ -314,29 +360,14 @@ If BIGWORD is non-nil, move by WORDS."
                                75
                              64)))))
 
-(after! doom-dashboard
-  (message "post doom-dashboard")
-  (style/left-frame)  ;; Focus new window after splitting
-)
+(style/left-frame)  ;; Focus new window after splitting
+(map!
+   :leader
+   :nvm "tm" #'style/max-frame
+   :nvm "td" #'style/left-frame)
 #+end_src
 
-#+RESULTS:
-
 * Keys
-
-** Key Detection Checklist
-
-- inspect the key with ~SPC h k~. Look for which keymaps are binding.
-- inspect the keymap with ~SPC h v~.
-- unbind any existing map with (map! :map xyz-map :inv #'command nil)
-- look in module docs (~SPC h d m~)
-  - custom keybinds for in the module, such as ~:lang org~.
-  - general keybinds for evil in the ~:editor evil~ module
-  - doom's "best default" keybinds in ~:config default~
-  - module plugins lists to see if we have an evil package for it.
-- Look for a module in [[https://github.com/emacs-evil/evil-collection][GitHub - emacs-evil/evil-collection: A set of keybindings for evil-mode]]. This package provides evil defaults for a variety of modes/packages.
-- Use ~discover-my-major~
-
 ** global keybindings
 
 #+begin_src elisp
@@ -536,6 +567,7 @@ Keeping a manual list to avoid using customize.
   (map! :map org-agenda-mode-map
         :localleader
         (:nvm "l" #'org-agenda-log-mode
+         :nvm "j" #'org-random-todo-goto-new
          :nvm "h" #'org-agenda-habit-mode)))
 
 (defun agenda-z ()
@@ -642,10 +674,6 @@ Keeping a manual list to avoid using customize.
    (add-hook 'org-babel-after-execute-hook #'display-ansi-colors)
 
    (map! :map org-mode-map
-        "C-c C-'" #'org-yank-into-new-block
-        "C-c C-." #'org-yank-into-new-elisp-block)
-
-   (map! :map org-mode-map
          :localleader
          (:prefix ("z" . "yank to block")
           :nvm "b" #'org-yank-into-new-block
@@ -734,38 +762,6 @@ A ToDo in the header makes the post a draft.
         (:nvm "lp" #'org-hugo-export-wim-to-md)))
 #+end_src
 
-* Alerts
-** OSX notifications
-
-  [[https://support.apple.com/en-au/HT204079][Use Notifications on your Mac – Apple Support (AU)]]
-
-  [[https://github.com/jwiegley/alert][GitHub - jwiegley/alert: A Growl-like alerts notifier for Emacs]]
-
-  Debugging is a bit tricky, as minibuffer messages are immedisately overwritten by other stuff.
-
-  #+begin_src elisp :tangle no
-  (run-with-timer 2
-                nil
-                (lambda () (alert "notifier")))
-
-  (setq alert-default-style 'osx-notifier)
-  (alert-add-rule)
-  #+end_src
-
-  #+begin_src elisp :tangle no
-  (alert "alert message" :title "alert title" :style 'osx-notifier)
-  #+end_src
-
-** org-wild-notifier
-#+begin_src elisp
-(use-package! org-wild-notifier
-  :defer t
-  :config
-  (add-hook! 'after-init-hook 'org-wild-notifier-mode)
-  (setq ;;org-wild-notifier-alert-time 15
-        alert-default-style (if IS-MAC 'osx-notifier 'libnotify)))
-#+end_src
-
 ** org-random-todo
 
 [[https://github.com/unhammer/org-random-todo][GitHub - unhammer/org-random-todo: 🍃 Pop up a random TODO from your agenda ev...]]
@@ -774,21 +770,13 @@ A ToDo in the header makes the post a draft.
 (after! org
   (use-package! org-random-todo
     :defer-incrementally t
-    :commands (org-random-todo-mode
-               org-random-todo
-               org-random-todo-goto-current
-               org-random-todo-goto-new)
+    :commands (org-random-todo-goto-new)
     :config
-    (setq org-random-todo-how-often 60000)
-    (org-random-todo-mode 1))
-
-  (after! alert
-    (alert-add-rule :mode 'org-mode
-                    :category "random-todo"
-                    :style 'osx-notifier
-                    :continue t)))
-
+    (map! :map org-mode-map
+        :localleader
+        (:nvm "j" #'org-random-todo-goto-new))))
 #+end_src
+
 * Deft
 
 #+begin_src elisp
@@ -877,21 +865,6 @@ A ToDo in the header makes the post a draft.
         (sp-local-pair "{-@" "@-")))
 #+end_src
 
-from [[https://magnus.therning.org/2021-03-05-000-flycheck-and-hls.html][Flycheck and HLS
-]]
-#+begin_src elisp :tangle no
-(with-eval-after-load 'lsp-mode
-  (defun lsp-next-checker-haskell ()
-    (flycheck-add-next-checker 'lsp '(warning . haskell-hlint)))
-  (add-hook 'lsp-after-open-hook
-            #'lsp-next-checker-haskell))
-#+end_src
-
-#+begin_src elisp :tangle no
-(flycheck-add-next-checker 'lsp '(info . haskell-hlint))
-(flycheck-add-next-checker 'lsp '(info . haskell-ghc))
-#+end_src
-
 ** haskell-lite
 
 #+begin_src elisp
@@ -931,95 +904,8 @@ s.reboot
   :after (haskell-mode yasnippet))
 #+end_src
 
-* Experimental
-** corfu (on)
-
-To actually use corfu, first turn company-mode off, then turn corfu-mode on.
-
-[[https://github.com/minad/corfu][GitHub - minad/corfu: corfu.el - Completion Overlay Region FUnction]]
-
-#+begin_src elisp
-(use-package! corfu
-  :config
-  ;;(corfu-global-mode)
-  (setq corfu-auto t))
-
-(use-package! cape
-  ;; Bind dedicated completion commands
-  :bind (("C-c p p" . completion-at-point) ;; capf
-         ("C-c p t" . complete-tag)        ;; etags
-         ("C-c p d" . cape-dabbrev)        ;; or dabbrev-completion
-         ("C-c p f" . cape-file)
-         ("C-c p k" . cape-keyword)
-         ("C-c p s" . cape-symbol)
-         ("C-c p a" . cape-abbrev)
-         ("C-c p i" . cape-ispell)
-         ("C-c p l" . cape-line)
-         ("C-c p w" . cape-dict)
-         ("C-c p \\" . cape-tex)
-         ("C-c p &" . cape-sgml)
-         ("C-c p r" . cape-rfc1345))
-  :init
-  ;; Add `completion-at-point-functions', used by `completion-at-point'.
-  (add-to-list 'completion-at-point-functions #'cape-file)
-  (add-to-list 'completion-at-point-functions #'cape-tex)
-  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
-  (add-to-list 'completion-at-point-functions #'cape-keyword)
-  ;;(add-to-list 'completion-at-point-functions #'cape-sgml)
-  ;;(add-to-list 'completion-at-point-functions #'cape-rfc1345)
-  ;;(add-to-list 'completion-at-point-functions #'cape-abbrev)
-  (add-to-list 'completion-at-point-functions #'cape-ispell)
-  ;;(add-to-list 'completion-at-point-functions #'cape-dict)
-  ;;(add-to-list 'completion-at-point-functions #'cape-symbol)
-  ;;(add-to-list 'completion-at-point-functions #'cape-line)
-)
-
-
-#+end_src
-
-  :bind (:map corfu-map
-         ("C-j" . corfu-next)
-         ("C-k" . corfu-previous)
-         ("C-f" . corfu-insert))
-
-
-[[https://www.youtube.com/c/SystemCrafters/videos][System Crafters - YouTube]]
-
-** elmo (on)
-
-Elmo turns embark into an incremental completion system.
-
-Vertico needs to be turned off for this to be sensible.
-
-[[https://github.com/karthink/elmo][GitHub - karthink/elmo: Embark Live MOde for Emacs]]
-
-Do not use elmo: [[https://karthinks.com/software/elmo-embark-live-mode-for-emacs/][ELMO - Embark Live Mode for Emacs | Karthinks]]
-
-
-
-#+begin_src elisp
-(use-package elmo
-  :config
-  (map! :leader :desc "elmo" "te" #'elmo-toggle)
-)
-
-(defun elmo-toggle ()
-  (interactive)
-  (if elmo-mode
-      (progn
-        (elmo-mode -1)
-        (vertico-mode 1)
-        (message "elmo-mode disabled"))
-    (progn
-      (elmo-mode 1)
-      (vertico-mode -1)
-      (message "elmo-mode enabled"))))
-#+end_src
-
-#+RESULTS:
-: elmo
-
-** easy-kill (on)
+* Non-standard packages
+** easy-kill
 
 [[https://github.com/leoliu/easy-kill][GitHub - leoliu/easy-kill: Kill & Mark Things Easily in Emacs]]
 
@@ -1030,7 +916,7 @@ Do not use elmo: [[https://karthinks.com/software/elmo-embark-live-mode-for-emac
 )
 #+end_src
 
-** consult-dir (on)
+** consult-dir
 
 #+begin_src elisp
 (use-package consult-dir
@@ -1041,7 +927,7 @@ Do not use elmo: [[https://karthinks.com/software/elmo-embark-live-mode-for-emac
          ("C-x C-j" . consult-dir-jump-file)))
 #+end_src
 
-** avy embark (on)
+** avy embark
 
 #+begin_src elisp
 
@@ -1058,9 +944,25 @@ Do not use elmo: [[https://karthinks.com/software/elmo-embark-live-mode-for-emac
 (setf (alist-get ?. avy-dispatch-alist) 'avy-action-embark)
 #+end_src
 
-
 ** latex
 
 #+begin_src elisp
 (setq org-latex-packages-alist '(("" "tikz-cd" t) ("" "tikz" t)))
+#+end_src
+
+** dirvish
+
+[[https://github.com/alexluigit/dirvish][GitHub - alexluigit/dirvish: Dired can be a nice file manager.]]
+
+#+begin_src elisp
+(use-package! dirvish
+  :config
+        (map!
+         :leader
+         :prefix ("d" . "dirvish")
+         :nvm "d" #'dirvish-dired
+         :nvm "f" #'dirvish)
+        (map! :map dired-mode-map
+        :localleader
+        (:nvm "t" #'dirvish-toggle-fullscreen)))
 #+end_src

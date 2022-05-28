@@ -221,10 +221,11 @@ If BIGWORD is non-nil, move by WORDS."
                                75
                              64)))))
 
-(after! doom-dashboard
-  (message "post doom-dashboard")
-  (style/left-frame)  ;; Focus new window after splitting
-)
+(style/left-frame)  ;; Focus new window after splitting
+(map!
+   :leader
+   :nvm "tm" #'style/max-frame
+   :nvm "td" #'style/left-frame)
 
 ;; replaces just-one-space
 (map! "M-SPC" #'cycle-spacing)
@@ -342,6 +343,7 @@ If BIGWORD is non-nil, move by WORDS."
   (map! :map org-agenda-mode-map
         :localleader
         (:nvm "l" #'org-agenda-log-mode
+         :nvm "j" #'org-random-todo-goto-new
          :nvm "h" #'org-agenda-habit-mode)))
 
 (defun agenda-z ()
@@ -437,10 +439,6 @@ If BIGWORD is non-nil, move by WORDS."
    (add-hook 'org-babel-after-execute-hook #'display-ansi-colors)
 
    (map! :map org-mode-map
-        "C-c C-'" #'org-yank-into-new-block
-        "C-c C-." #'org-yank-into-new-elisp-block)
-
-   (map! :map org-mode-map
          :localleader
          (:prefix ("z" . "yank to block")
           :nvm "b" #'org-yank-into-new-block
@@ -498,29 +496,14 @@ If BIGWORD is non-nil, move by WORDS."
         :localleader
         (:nvm "lp" #'org-hugo-export-wim-to-md)))
 
-(use-package! org-wild-notifier
-  :defer t
-  :config
-  (add-hook! 'after-init-hook 'org-wild-notifier-mode)
-  (setq ;;org-wild-notifier-alert-time 15
-        alert-default-style (if IS-MAC 'osx-notifier 'libnotify)))
-
 (after! org
   (use-package! org-random-todo
     :defer-incrementally t
-    :commands (org-random-todo-mode
-               org-random-todo
-               org-random-todo-goto-current
-               org-random-todo-goto-new)
+    :commands (org-random-todo-goto-new)
     :config
-    (setq org-random-todo-how-often 60000)
-    (org-random-todo-mode 1))
-
-  (after! alert
-    (alert-add-rule :mode 'org-mode
-                    :category "random-todo"
-                    :style 'osx-notifier
-                    :continue t)))
+    (map! :map org-mode-map
+        :localleader
+        (:nvm "j" #'org-random-todo-goto-new))))
 
 (after! deft
   (setq
@@ -608,58 +591,6 @@ If BIGWORD is non-nil, move by WORDS."
 (use-package! haskell-snippets
   :after (haskell-mode yasnippet))
 
-(use-package! corfu
-  :config
-  ;;(corfu-global-mode)
-  (setq corfu-auto t))
-
-(use-package! cape
-  ;; Bind dedicated completion commands
-  :bind (("C-c p p" . completion-at-point) ;; capf
-         ("C-c p t" . complete-tag)        ;; etags
-         ("C-c p d" . cape-dabbrev)        ;; or dabbrev-completion
-         ("C-c p f" . cape-file)
-         ("C-c p k" . cape-keyword)
-         ("C-c p s" . cape-symbol)
-         ("C-c p a" . cape-abbrev)
-         ("C-c p i" . cape-ispell)
-         ("C-c p l" . cape-line)
-         ("C-c p w" . cape-dict)
-         ("C-c p \\" . cape-tex)
-         ("C-c p &" . cape-sgml)
-         ("C-c p r" . cape-rfc1345))
-  :init
-  ;; Add `completion-at-point-functions', used by `completion-at-point'.
-  (add-to-list 'completion-at-point-functions #'cape-file)
-  (add-to-list 'completion-at-point-functions #'cape-tex)
-  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
-  (add-to-list 'completion-at-point-functions #'cape-keyword)
-  ;;(add-to-list 'completion-at-point-functions #'cape-sgml)
-  ;;(add-to-list 'completion-at-point-functions #'cape-rfc1345)
-  ;;(add-to-list 'completion-at-point-functions #'cape-abbrev)
-  (add-to-list 'completion-at-point-functions #'cape-ispell)
-  ;;(add-to-list 'completion-at-point-functions #'cape-dict)
-  ;;(add-to-list 'completion-at-point-functions #'cape-symbol)
-  ;;(add-to-list 'completion-at-point-functions #'cape-line)
-)
-
-(use-package elmo
-  :config
-  (map! :leader :desc "elmo" "te" #'elmo-toggle)
-)
-
-(defun elmo-toggle ()
-  (interactive)
-  (if elmo-mode
-      (progn
-        (elmo-mode -1)
-        (vertico-mode 1)
-        (message "elmo-mode disabled"))
-    (progn
-      (elmo-mode 1)
-      (vertico-mode -1)
-      (message "elmo-mode enabled"))))
-
 (use-package easy-kill
   :config
   (map! "M-w" #'easy-kill)
@@ -685,3 +616,14 @@ If BIGWORD is non-nil, move by WORDS."
 (setf (alist-get ?. avy-dispatch-alist) 'avy-action-embark)
 
 (setq org-latex-packages-alist '(("" "tikz-cd" t) ("" "tikz" t)))
+
+(use-package! dirvish
+  :config
+        (map!
+         :leader
+         :prefix ("d" . "dirvish")
+         :nvm "d" #'dirvish-dired
+         :nvm "f" #'dirvish)
+        (map! :map dired-mode-map
+        :localleader
+        (:nvm "t" #'dirvish-toggle-fullscreen)))

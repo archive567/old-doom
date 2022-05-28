@@ -1,7 +1,0 @@
-# -*- mode: snippet -*-
-# name: Split an elisp source block.
-# key: sspl
-# --
-#+end_src
-
-#+begin_src elisp

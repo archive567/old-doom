@@ -50,9 +50,6 @@
 ;(unpin! t)
 
 (package! easy-kill)
-(package! elmo :recipe
-  (:host github
-   :repo "karthink/elmo"))
 (package! consult-dir)
 (package! move-text) ;; = M-up = = M-down =
 (package! org-random-todo)
@@ -61,7 +58,6 @@
   (:host github
    :repo "toshism/org-super-links"
    :branch "develop"))
-(package! org-wild-notifier)
 (package! origami)
 (package! tidal
   :recipe (:host github :repo "tidalcycles/Tidal"))
@@ -75,14 +71,6 @@
   (:host github
    :repo "tonyday567/haskell-lite"
    :branch "main"))
-
-(package! corfu :recipe
-  (:host github
-   :repo "minad/corfu"))
-
-(package! cape :recipe
-  (:host github
-   :repo "minad/cape"))
-
 (package! discover-my-major)
 (package! haskell-snippets)
+(package! dirvish)

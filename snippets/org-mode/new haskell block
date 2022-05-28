@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: new haskell block
+# key: hb
+# --
+#+begin_src haskell :results output
+$0
+#+end_src
