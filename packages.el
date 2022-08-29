@@ -74,3 +74,7 @@
 (package! discover-my-major)
 (package! haskell-snippets)
 (package! dirvish)
+(package! dumb-jump)
+(disable-packages!
+ org-superstar)
+(package! org-modern)

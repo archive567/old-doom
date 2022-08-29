@@ -1,38 +1,38 @@
 #+TITLE: Doom Emacs Configuration
 
-
 * Non-standard binding summary
 
-| key             | command                      |
-|-----------------+------------------------------|
+| key         | command                      |
+|-------------+------------------------------|
 | ~v~ ~V~         | expands and contracts region |
-| ~SPC s f~       | consult-find                 |
-| ~SPC s y~       | consult-yank-from-kill-ring  |
-| ~M-SPC~         | cycle-spacing                |
-| ~M-j~           | avy-goto-char-timer          |
-|                 |                              |
+| ~SPC s f~     | consult-find                 |
+| ~SPC s y~     | consult-yank-from-kill-ring  |
+| ~M-SPC~       | cycle-spacing                |
+| ~M-j~         | avy-goto-char-timer          |
+| ~SPC m l c~   | org-clip-link                |
 | ~gk~ ~gj~       | up and down an org header    |
-| ~SPC m m i~     | insert a backlink            |
-| ~SPC m m l~     | org-super-links-link         |
-| ~SPC m z~       | yank to block commands       |
-| ~SPC m l p~     | org-hugo-export-wim-to-md    |
-| ~SPC m n~       | flycheck-next-error          |
-| ~SPC m p~       | flycheck-previous-error      |
-| ~M-w~           | easy-kill                    |
-| ~C-x C-d~       | consult-dir                  |
+| ~SPC m m i~   | insert a backlink            |
+| ~SPC m m l~   | org-super-links-link         |
+| ~SPC m z~     | yank to block commands       |
+| ~SPC m l p~   | org-hugo-export-wim-to-md    |
+| ~SPC m n~     | flycheck-next-error          |
+| ~SPC m p~     | flycheck-previous-error      |
+| ~M-w~         | easy-kill                    |
+| ~C-x C-d~     | consult-dir                  |
+| ~C-x C-j~     | consult-dir-jump-file        |
 | ~M-up~ ~M-down~ | Move line up/down            |
-| ~C-;~           | embark-act                   |
-|                 |                              |
-| ~SPC t m~       | style/max-frame              |
-| ~SPC t d~       | style/default-frame          |
+| ~C-;~         | embark-act                   |
+| ~SPC d d~     | dirvish-dired                |
+|             |                              |
+| ~SPC t m~     | style/max-frame              |
+| ~SPC t d~     | style/default-frame          |
 
 * Configuration Examples
 
 Most of my doom config, and much of my work flow has been put together from reading and stealing from other configs.
 
 A useful technique is to do an advanced github search of these repos, together with the main doom-emacs repository. An example:
-
-[[https://github.com/search?q=embark-act+repo%3Ahlissner%2Fdoom-emacs+repo%3Ahlissner%2Fdoom-emacs-private+repo%3Afloscr%2Femacs.d+repo%3Adangirsh%2F.doom.d%2F+repo%3ALemonBreezes%2F.doom.d+repo%3Azzamboni%2Fdot-emacs+repo%3Ajethrokuan%2Fdots+repo%3Asachac%2F.emacs.d%2F+repo%3Adaviwil%2Fdotfiles+repo%3Afrap%2Femacs-literate+repo%3AMatthewZMD%2F.emacs.d+repo%3Akarthink%2F.emacs.d&type=Code][Example search on "embark-act"]]
+[[https://github.com/search?q=org-modern+repo%3Adoomemacs%2Fdoomemacs+repo%3Ahlissner%2F.doom.d+repo%3Afloscr%2Femacs.d+repo%3Adangirsh%2F.doom.d%2F+repo%3ALemonBreezes%2F.doom.d+repo%3Azzamboni%2Fdot-emacs+repo%3Ajethrokuan%2Fdots+repo%3Asachac%2F.emacs.d%2F+repo%3Adaviwil%2Fdotfiles+repo%3Afrap%2Femacs-literate+repo%3AMatthewZMD%2F.emacs.d+repo%3Akarthink%2F.emacs.d&type=Code][Example search on org-modern]]
 
 ** YouTube
 
@@ -103,6 +103,9 @@ See practical map! usage here:
 
 As per default doom config.el.
 
+[[https://elpa.gnu.org/packages/doc/modus-themes.html#Fringes][Modus themes for GNU Emacs]]
+[[https://protesilaos.com/emacs/modus-themes][Modus Themes (Modus Operandi and Modus Vivendi) | Protesilaos Stavrou]]
+
 #+begin_src elisp
 ;;; $DOOMDIR/config.el -*- lexical-binding: t; -*-
 
@@ -127,14 +130,16 @@ As per default doom config.el.
 ;;
 ;; They all accept either a font-spec, font string ("Input Mono-12"), or xlfd
 ;; font string. You generally only need these two:
-(setq doom-font (font-spec :family "Iosevka ss02" :size 14 :weight 'light)
-      doom-variable-pitch-font (font-spec :family "Iosevka etoile" :size 20))
+;;(setq doom-font (font-spec :family "Iosevka ss02" :size 14 :weight 'light)
+;;      doom-variable-pitch-font (font-spec :family "Iosevka etoile" :size 14))
+(setq doom-font (font-spec :family "Iosevka")
+      doom-variable-pitch-font (font-spec :family "Iosevka Aile"))
 
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. This is the default:
-;; (setq doom-theme 'doom-oceanic-next)
-(setq doom-theme 'doom-Iosvkem)
+;; (setq doom-theme 'doom-Iosvkem)
+(setq doom-theme 'modus-operandi)
 ;; (doom-themes-org-config)
 
 ;; If you use `org' and don't want your org files in the default location below,
@@ -427,16 +432,14 @@ If BIGWORD is non-nil, move by WORDS."
 (after! org
   :config
   (setq
-   org-superstar-headline-bullets-list '("⁖")
    org-startup-folded 'overview
    org-support-shift-select t
-   org-insert-heading-respect-content nil
+   org-insert-heading-respect-content t
    org-ellipsis " [...] "
    org-startup-with-inline-images t
    org-cycle-include-plain-lists 'integrate
    ;; https://github.com/syl20bnr/spacemacs/issues/13465
    org-src-tab-acts-natively nil)
-   ;; flyspell off for org mode
    (remove-hook 'org-mode-hook 'flyspell-mode)
 )
  #+end_src
@@ -455,49 +458,6 @@ If BIGWORD is non-nil, move by WORDS."
 #+end_src
 
 #+RESULTS:
-
-** ToDos
-
-#+begin_src elisp
-
-(after! org
-  :config
-   (setq-default org-todo-keywords '((sequence "ToDo(t)" "Next(n)" "Blocked(b)" "|" "Done(d!)")))
-   (setq org-todo-keyword-faces (quote (("ToDo" :foreground "#2E2E8B8B5757" :weight bold)
-                                        ("Done" :foreground "black" :weight bold)
-                                        ("Blocked" :foreground "yellow4" :weight bold)
-                                        ("Next" :foreground "orange red" :weight bold))))
-   (setq org-agenda-category-icon-alist
-        `(("life" ,(list (all-the-icons-material "home" :height 1)) nil nil :ascent center)
-          ("garden" ,(list (all-the-icons-material "home" :height 1)) nil nil :ascent center)
-          ("sys" ,(list (all-the-icons-material "settings" :height 1)) nil nil :ascent center)
-          ("bugz" ,(list (all-the-icons-material "flag" :height 1)) nil nil :ascent center)
-          ("emacs" ,(list (all-the-icons-material "edit" :height 1)) nil nil :ascent center)
-          ("repo" ,(list (all-the-icons-material "ac_unit" :height 1)) nil nil :ascent center)
-          ("ib" ,(list (all-the-icons-material "account_balance" :height 1)) nil nil :ascent center)
-          ("fe" ,(list (all-the-icons-material "local_atm" :height 1)) nil nil :ascent center)
-          ("auspol" ,(list (all-the-icons-material "format_align_left" :height 1)) nil nil :ascent center)
-          ("drafts" ,(list (all-the-icons-material "format_align_left" :height 1)) nil nil :ascent center)
-          ("iqfeed" ,(list (all-the-icons-material "account_balance" :height 1)) nil nil :ascent center)
-          ("haskell" ,(list (all-the-icons-material "event_available" :height 1)) nil nil :ascent center)
-          ("act" ,(list (all-the-icons-material "event_available" :height 1)) nil nil :ascent center)
-          ("refile" ,(list (all-the-icons-material "move_to_inbox" :height 1)) nil nil :ascent center)))
-)
-
-#+end_src
-
-#+RESULTS:
-| life    | () | nil | nil | :ascent | center |
-| sys     | () | nil | nil | :ascent | center |
-| bugz    | () | nil | nil | :ascent | center |
-| emacs   | () | nil | nil | :ascent | center |
-| repo    | () | nil | nil | :ascent | center |
-| ib      | () | nil | nil | :ascent | center |
-| fe      | () | nil | nil | :ascent | center |
-| drafts  | () | nil | nil | :ascent | center |
-| iqfeed  | () | nil | nil | :ascent | center |
-| haskell | () | nil | nil | :ascent | center |
-| refile  | () | nil | nil | :ascent | center |
 
 ** org-super-links
 
@@ -777,6 +737,124 @@ A ToDo in the header makes the post a draft.
         (:nvm "j" #'org-random-todo-goto-new))))
 #+end_src
 
+** org-modern (new)
+
+[[https://github.com/minad/org-modern][GitHub - minad/org-modern: Modern Org Style]]
+
+#+begin_src elisp
+(use-package! org-modern
+  :config
+  (modify-all-frames-parameters
+   '((right-divider-width . 10)
+     (internal-border-width . 10)))
+  (dolist (face '(window-divider
+                  window-divider-first-pixel
+                  window-divider-last-pixel))
+    (face-spec-reset-face face)
+    (set-face-foreground face (face-attribute 'default :background)))
+  (set-face-background 'fringe (face-attribute 'default :background))
+  (setq
+   ;; Edit settings
+   org-auto-align-tags nil
+   org-tags-column 0
+   org-catch-invisible-edits 'show-and-error
+   org-special-ctrl-a/e t
+   org-insert-heading-respect-content t
+
+   ;; Org styling, hide markup etc.
+   org-hide-emphasis-markers t
+   org-pretty-entities t
+   org-ellipsis "…"
+   org-agenda-tags-column 0
+   org-agenda-block-separator ?─)
+
+   (set-face-attribute 'default nil :family "Iosevka")
+   (set-face-attribute 'variable-pitch nil :family "Iosevka Aile")
+   (set-face-attribute 'org-modern-symbol nil :family "Iosevka")
+
+   ;; (set-face-attribute 'org-block-begin-line nil :background nil)
+   ;; (set-face-attribute 'org-block-end-line nil :background nil)
+   ;; (set-face-attribute 'org-modern-label nil :box '(:line-width 4 :color (face-background 'default)))
+   (setq org-modern-label-border 0)
+   (setq org-startup-indented nil)
+   ;; (setq-default electric-indent-mode nil)
+   (setq-default org-todo-keywords '((sequence "ToDo(t)" "Next(n)" "Blocked(b)" "|" "Done(d!)")))
+   (setq-local line-spacing 0.2)
+   (global-org-modern-mode)
+   )
+#+end_src
+
+[[https://github.com/LemonBreezes/.doom.d/blob/ce425f1f5798411888860ec269b7aa02932d8ffb/lisp/set-up-theme-stuff.el][.doom.d/set-up-theme-stuff.el at ce425f1f5798411888860ec269b7aa02932d8ffb · L...]]
+
+#+begin_src elisp :tangle no
+(defun my-set-face-bg-fg-inverse-video (face bg fg)
+  (set-face-attribute face nil :inverse-video t)
+  (set-face-foreground face bg)
+  (set-face-background face fg))
+
+(after! org
+  (set-face-foreground 'org-todo (face-foreground 'outline-1 nil t))
+  (after! org-modern
+    (my-set-face-bg-fg-inverse-video 'org-modern-done
+                                     (face-foreground 'org-headline-done nil t)
+                                     (alist-get 'background-color (frame-parameters)))
+    (set-face-attribute 'org-modern-done nil :weight 'semibold)
+    (my-set-face-bg-fg-inverse-video 'org-modern-time-inactive
+                                     "gray50"
+                                     (if (< (color-distance (alist-get 'background-color (frame-parameters))
+                                                            "gray95")
+                                            face-near-same-color-threshold)
+                                         "gray95"
+                                       "gray5"))
+    (my-set-face-bg-fg-inverse-video 'org-modern-tag
+                                     (face-foreground 'org-level-1 nil t)
+                                     (alist-get 'background-color (frame-parameters)))
+    (cl-loop for buf being the buffers do
+             (when (buffer-local-value 'org-modern-mode buf)
+               (with-current-buffer buf
+                 (org-modern--update-label-face)))))
+  (set-face-attribute 'org-ellipsis nil
+                      :inherit '(shadow default)
+                      :weight 'normal)
+  (set-face-attribute 'org-document-title nil
+                      :height 1.2))
+
+(after! modus-themes
+  (let ((modus-themes-inhibit-reload t))
+    (setq! modus-themes-italic-constructs t
+            modus-themes-slanted-constructs t
+            modus-themes-bold-constructs nil
+            modus-themes-lang-checkers '(faint)
+            modus-themes-org-blocks 'gray-background
+            modus-themes-mode-line '(3d accented)
+            modus-themes-syntax '(alt-syntax green-strings yellow-comments)
+            modus-themes-headings '((1 . (1.25 extrabold rainbow))
+                                    (2 . (1.15 semibold rainbow))
+                                    (3 . (1.12 semibold rainbow))
+                                    (4 . (1.09 medium rainbow))
+                                    (5 . (1.06 medium rainbow))
+                                    (6 . (1.03 medium rainbow))
+                                    (7 . (medium rainbow))
+                                    (8 . (medium rainbow))
+                                    (t . (rainbow)))
+            modus-themes-box-buttons '(accented semibold 0.9 faint all-buttons)
+            modus-themes-fringes 'intense
+            modus-themes-hl-line '()
+            modus-themes-intense-mouseovers '(neutral-underline background)
+            modus-themes-markup '(intense italic)
+            modus-themes-paren-match '(intense)
+            modus-themes-prompts '(intense bold)
+            modus-themes-region '(accented bg-only)
+            modus-themes-subtle-line-numbers nil
+            modus-themes-tabs-accented t
+            modus-themes-lang-checkers '(straight-underline intense text-also)
+            modus-themes-links '(bold)
+            modus-themes-completions nil
+            modus-themes-mail-citations 'intense
+            modus-themes-deuteranopia nil))
+  (setq! modus-themes-inhibit-reload nil))
+#+end_src
+
 * Deft
 
 #+begin_src elisp
@@ -966,3 +1044,16 @@ s.reboot
         :localleader
         (:nvm "t" #'dirvish-toggle-fullscreen)))
 #+end_src
+** dumb-jump (new)
+
+[[https://github.com/jacktasia/dumb-jump][GitHub - jacktasia/dumb-jump: an Emacs "jump to definition" package for 50+ l...]]
+
+#+begin_src elisp
+(use-package! dumb-jump
+  :init
+   (progn
+     (add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
+     (setq xref-show-definitions-function #'xref-show-definitions-completing-read)
+   ))
+#+end_src
+

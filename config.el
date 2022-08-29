@@ -21,14 +21,16 @@
 ;;
 ;; They all accept either a font-spec, font string ("Input Mono-12"), or xlfd
 ;; font string. You generally only need these two:
-(setq doom-font (font-spec :family "Iosevka ss02" :size 14 :weight 'light)
-      doom-variable-pitch-font (font-spec :family "Iosevka etoile" :size 20))
+;;(setq doom-font (font-spec :family "Iosevka ss02" :size 14 :weight 'light)
+;;      doom-variable-pitch-font (font-spec :family "Iosevka etoile" :size 14))
+(setq doom-font (font-spec :family "Iosevka")
+      doom-variable-pitch-font (font-spec :family "Iosevka Aile"))
 
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. This is the default:
-;; (setq doom-theme 'doom-oceanic-next)
-(setq doom-theme 'doom-Iosvkem)
+;; (setq doom-theme 'doom-Iosvkem)
+(setq doom-theme 'modus-operandi)
 ;; (doom-themes-org-config)
 
 ;; If you use `org' and don't want your org files in the default location below,
@@ -257,16 +259,14 @@ If BIGWORD is non-nil, move by WORDS."
 (after! org
   :config
   (setq
-   org-superstar-headline-bullets-list '("⁖")
    org-startup-folded 'overview
    org-support-shift-select t
-   org-insert-heading-respect-content nil
+   org-insert-heading-respect-content t
    org-ellipsis " [...] "
    org-startup-with-inline-images t
    org-cycle-include-plain-lists 'integrate
    ;; https://github.com/syl20bnr/spacemacs/issues/13465
    org-src-tab-acts-natively nil)
-   ;; flyspell off for org mode
    (remove-hook 'org-mode-hook 'flyspell-mode)
 )
 
@@ -278,30 +278,6 @@ If BIGWORD is non-nil, move by WORDS."
        :n "gj" (cmd! (if (org-on-heading-p)
                          (org-forward-element)
                        (evil-next-visual-line)))))
-
-(after! org
-  :config
-   (setq-default org-todo-keywords '((sequence "ToDo(t)" "Next(n)" "Blocked(b)" "|" "Done(d!)")))
-   (setq org-todo-keyword-faces (quote (("ToDo" :foreground "#2E2E8B8B5757" :weight bold)
-                                        ("Done" :foreground "black" :weight bold)
-                                        ("Blocked" :foreground "yellow4" :weight bold)
-                                        ("Next" :foreground "orange red" :weight bold))))
-   (setq org-agenda-category-icon-alist
-        `(("life" ,(list (all-the-icons-material "home" :height 1)) nil nil :ascent center)
-          ("garden" ,(list (all-the-icons-material "home" :height 1)) nil nil :ascent center)
-          ("sys" ,(list (all-the-icons-material "settings" :height 1)) nil nil :ascent center)
-          ("bugz" ,(list (all-the-icons-material "flag" :height 1)) nil nil :ascent center)
-          ("emacs" ,(list (all-the-icons-material "edit" :height 1)) nil nil :ascent center)
-          ("repo" ,(list (all-the-icons-material "ac_unit" :height 1)) nil nil :ascent center)
-          ("ib" ,(list (all-the-icons-material "account_balance" :height 1)) nil nil :ascent center)
-          ("fe" ,(list (all-the-icons-material "local_atm" :height 1)) nil nil :ascent center)
-          ("auspol" ,(list (all-the-icons-material "format_align_left" :height 1)) nil nil :ascent center)
-          ("drafts" ,(list (all-the-icons-material "format_align_left" :height 1)) nil nil :ascent center)
-          ("iqfeed" ,(list (all-the-icons-material "account_balance" :height 1)) nil nil :ascent center)
-          ("haskell" ,(list (all-the-icons-material "event_available" :height 1)) nil nil :ascent center)
-          ("act" ,(list (all-the-icons-material "event_available" :height 1)) nil nil :ascent center)
-          ("refile" ,(list (all-the-icons-material "move_to_inbox" :height 1)) nil nil :ascent center)))
-)
 
 (use-package! org-super-links
   :config
@@ -505,6 +481,47 @@ If BIGWORD is non-nil, move by WORDS."
         :localleader
         (:nvm "j" #'org-random-todo-goto-new))))
 
+(use-package! org-modern
+  :config
+  (modify-all-frames-parameters
+   '((right-divider-width . 10)
+     (internal-border-width . 10)))
+  (dolist (face '(window-divider
+                  window-divider-first-pixel
+                  window-divider-last-pixel))
+    (face-spec-reset-face face)
+    (set-face-foreground face (face-attribute 'default :background)))
+  (set-face-background 'fringe (face-attribute 'default :background))
+  (setq
+   ;; Edit settings
+   org-auto-align-tags nil
+   org-tags-column 0
+   org-catch-invisible-edits 'show-and-error
+   org-special-ctrl-a/e t
+   org-insert-heading-respect-content t
+
+   ;; Org styling, hide markup etc.
+   org-hide-emphasis-markers t
+   org-pretty-entities t
+   org-ellipsis "…"
+   org-agenda-tags-column 0
+   org-agenda-block-separator ?─)
+
+   (set-face-attribute 'default nil :family "Iosevka")
+   (set-face-attribute 'variable-pitch nil :family "Iosevka Aile")
+   (set-face-attribute 'org-modern-symbol nil :family "Iosevka")
+
+   ;; (set-face-attribute 'org-block-begin-line nil :background nil)
+   ;; (set-face-attribute 'org-block-end-line nil :background nil)
+   ;; (set-face-attribute 'org-modern-label nil :box '(:line-width 4 :color (face-background 'default)))
+   (setq org-modern-label-border 0)
+   (setq org-startup-indented nil)
+   ;; (setq-default electric-indent-mode nil)
+   (setq-default org-todo-keywords '((sequence "ToDo(t)" "Next(n)" "Blocked(b)" "|" "Done(d!)")))
+   (setq-local line-spacing 0.2)
+   (global-org-modern-mode)
+   )
+
 (after! deft
   (setq
    deft-directory "~/org"
@@ -627,3 +644,10 @@ If BIGWORD is non-nil, move by WORDS."
         (map! :map dired-mode-map
         :localleader
         (:nvm "t" #'dirvish-toggle-fullscreen)))
+
+(use-package! dumb-jump
+  :init
+   (progn
+     (add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
+     (setq xref-show-definitions-function #'xref-show-definitions-completing-read)
+   ))
