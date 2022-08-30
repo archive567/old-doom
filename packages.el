@@ -54,23 +54,9 @@
 (package! move-text) ;; = M-up = = M-down =
 (package! org-random-todo)
 (package! org-super-agenda)
-(package! org-super-links :recipe
-  (:host github
-   :repo "toshism/org-super-links"
-   :branch "develop"))
 (package! origami)
 (package! tidal
   :recipe (:host github :repo "tidalcycles/Tidal"))
-
-(package! fd-haskell :recipe
-  (:host github
-   :repo "tonyday567/fd-haskell"
-   :branch "fixes"))
-
-(package! haskell-lite :recipe
-  (:host github
-   :repo "tonyday567/haskell-lite"
-   :branch "main"))
 (package! discover-my-major)
 (package! haskell-snippets)
 (package! dirvish)

@@ -262,11 +262,20 @@ If BIGWORD is non-nil, move by WORDS."
    org-startup-folded 'overview
    org-support-shift-select t
    org-insert-heading-respect-content t
-   org-ellipsis " [...] "
    org-startup-with-inline-images t
    org-cycle-include-plain-lists 'integrate
    ;; https://github.com/syl20bnr/spacemacs/issues/13465
-   org-src-tab-acts-natively nil)
+   org-src-tab-acts-natively nil
+   ;; from org-modern example
+   org-auto-align-tags nil
+   org-tags-column 0
+   org-catch-invisible-edits 'show-and-error
+   org-special-ctrl-a/e t
+   org-hide-emphasis-markers t
+   org-pretty-entities t
+   org-ellipsis "…"
+   org-agenda-tags-column 0
+   org-agenda-block-separator ?─)
    (remove-hook 'org-mode-hook 'flyspell-mode)
 )
 
@@ -278,17 +287,6 @@ If BIGWORD is non-nil, move by WORDS."
        :n "gj" (cmd! (if (org-on-heading-p)
                          (org-forward-element)
                        (evil-next-visual-line)))))
-
-(use-package! org-super-links
-  :config
-  (map! :map org-mode-map
-        :localleader
-        (:prefix ("m" . "backlinks")
-         :nvm "l" #'org-super-links-link
-         :nvm "s" #'org-super-links-store-link
-         :nvm "i" #'org-super-links-insert-link
-         :nvm "d" #'org-super-links-delete-link
-         :nvm "c" #'org-super-links-convert-link-to-super)))
 
 (after! org-agenda
   :config
@@ -492,35 +490,20 @@ If BIGWORD is non-nil, move by WORDS."
     (face-spec-reset-face face)
     (set-face-foreground face (face-attribute 'default :background)))
   (set-face-background 'fringe (face-attribute 'default :background))
-  (setq
-   ;; Edit settings
-   org-auto-align-tags nil
-   org-tags-column 0
-   org-catch-invisible-edits 'show-and-error
-   org-special-ctrl-a/e t
-   org-insert-heading-respect-content t
+  (set-face-attribute 'default nil :family "Iosevka")
+  (set-face-attribute 'variable-pitch nil :family "Iosevka Aile")
+  (set-face-attribute 'org-modern-symbol nil :family "Iosevka")
 
-   ;; Org styling, hide markup etc.
-   org-hide-emphasis-markers t
-   org-pretty-entities t
-   org-ellipsis "…"
-   org-agenda-tags-column 0
-   org-agenda-block-separator ?─)
-
-   (set-face-attribute 'default nil :family "Iosevka")
-   (set-face-attribute 'variable-pitch nil :family "Iosevka Aile")
-   (set-face-attribute 'org-modern-symbol nil :family "Iosevka")
-
-   ;; (set-face-attribute 'org-block-begin-line nil :background nil)
-   ;; (set-face-attribute 'org-block-end-line nil :background nil)
-   ;; (set-face-attribute 'org-modern-label nil :box '(:line-width 4 :color (face-background 'default)))
-   (setq org-modern-label-border 0)
-   (setq org-startup-indented nil)
-   ;; (setq-default electric-indent-mode nil)
-   (setq-default org-todo-keywords '((sequence "ToDo(t)" "Next(n)" "Blocked(b)" "|" "Done(d!)")))
-   (setq-local line-spacing 0.2)
-   (global-org-modern-mode)
-   )
+  ;; (set-face-attribute 'org-block-begin-line nil :background nil)
+  ;; (set-face-attribute 'org-block-end-line nil :background nil)
+  ;; (set-face-attribute 'org-modern-label nil :box '(:line-width 4 :color (face-background 'default)))
+  (setq org-modern-label-border 0)
+  (setq org-startup-indented nil)
+  ;; (setq-default electric-indent-mode nil)
+  (setq-default org-todo-keywords '((sequence "ToDo(t)" "Next(n)" "Blocked(b)" "|" "Done(d!)")))
+  (setq-local line-spacing 0.2)
+  (global-org-modern-mode)
+  )
 
 (after! deft
   (setq
@@ -593,10 +576,6 @@ If BIGWORD is non-nil, move by WORDS."
         (sp-local-pair "{-#" "#-")
         (sp-local-pair "{-@" "@-")))
 
-(use-package! fd-haskell)
-
-(use-package! haskell-lite)
-
 (use-package! tidal
     :init
     (progn
@@ -636,11 +615,11 @@ If BIGWORD is non-nil, move by WORDS."
 
 (use-package! dirvish
   :config
+        (dirvish-override-dired-mode)
         (map!
          :leader
          :prefix ("d" . "dirvish")
-         :nvm "d" #'dirvish-dired
-         :nvm "f" #'dirvish)
+         :nvm "d" #'dirvish)
         (map! :map dired-mode-map
         :localleader
         (:nvm "t" #'dirvish-toggle-fullscreen)))

@@ -11,8 +11,6 @@
 | ~M-j~         | avy-goto-char-timer          |
 | ~SPC m l c~   | org-clip-link                |
 | ~gk~ ~gj~       | up and down an org header    |
-| ~SPC m m i~   | insert a backlink            |
-| ~SPC m m l~   | org-super-links-link         |
 | ~SPC m z~     | yank to block commands       |
 | ~SPC m l p~   | org-hugo-export-wim-to-md    |
 | ~SPC m n~     | flycheck-next-error          |
@@ -22,8 +20,6 @@
 | ~C-x C-j~     | consult-dir-jump-file        |
 | ~M-up~ ~M-down~ | Move line up/down            |
 | ~C-;~         | embark-act                   |
-| ~SPC d d~     | dirvish-dired                |
-|             |                              |
 | ~SPC t m~     | style/max-frame              |
 | ~SPC t d~     | style/default-frame          |
 
@@ -435,11 +431,20 @@ If BIGWORD is non-nil, move by WORDS."
    org-startup-folded 'overview
    org-support-shift-select t
    org-insert-heading-respect-content t
-   org-ellipsis " [...] "
    org-startup-with-inline-images t
    org-cycle-include-plain-lists 'integrate
    ;; https://github.com/syl20bnr/spacemacs/issues/13465
-   org-src-tab-acts-natively nil)
+   org-src-tab-acts-natively nil
+   ;; from org-modern example
+   org-auto-align-tags nil
+   org-tags-column 0
+   org-catch-invisible-edits 'show-and-error
+   org-special-ctrl-a/e t
+   org-hide-emphasis-markers t
+   org-pretty-entities t
+   org-ellipsis "…"
+   org-agenda-tags-column 0
+   org-agenda-block-separator ?─)
    (remove-hook 'org-mode-hook 'flyspell-mode)
 )
  #+end_src
@@ -458,31 +463,6 @@ If BIGWORD is non-nil, move by WORDS."
 #+end_src
 
 #+RESULTS:
-
-** org-super-links
-
-[[file:~/org/emacs.org::*backlinks][backlinks]]
-
-~org-roam~ gets too far away from life in plain text.  90% of the benefit is backlinks, which org-super-links provides.
-
-[[https://github.com/toshism/org-super-links][GitHub - toshism/org-super-links: Package to create links with auto backlinks]]
-
-In an org file, a capture automatically generates a super-link, so ~SPC m m i~ would insert a backlink in the item.
-
-~SPC m m l~
-
-#+begin_src elisp
-(use-package! org-super-links
-  :config
-  (map! :map org-mode-map
-        :localleader
-        (:prefix ("m" . "backlinks")
-         :nvm "l" #'org-super-links-link
-         :nvm "s" #'org-super-links-store-link
-         :nvm "i" #'org-super-links-insert-link
-         :nvm "d" #'org-super-links-delete-link
-         :nvm "c" #'org-super-links-convert-link-to-super)))
-#+end_src
 
 ** org-agenda
 :BACKLINKS:
@@ -737,7 +717,7 @@ A ToDo in the header makes the post a draft.
         (:nvm "j" #'org-random-todo-goto-new))))
 #+end_src
 
-** org-modern (new)
+** org-modern
 
 [[https://github.com/minad/org-modern][GitHub - minad/org-modern: Modern Org Style]]
 
@@ -753,106 +733,20 @@ A ToDo in the header makes the post a draft.
     (face-spec-reset-face face)
     (set-face-foreground face (face-attribute 'default :background)))
   (set-face-background 'fringe (face-attribute 'default :background))
-  (setq
-   ;; Edit settings
-   org-auto-align-tags nil
-   org-tags-column 0
-   org-catch-invisible-edits 'show-and-error
-   org-special-ctrl-a/e t
-   org-insert-heading-respect-content t
+  (set-face-attribute 'default nil :family "Iosevka")
+  (set-face-attribute 'variable-pitch nil :family "Iosevka Aile")
+  (set-face-attribute 'org-modern-symbol nil :family "Iosevka")
 
-   ;; Org styling, hide markup etc.
-   org-hide-emphasis-markers t
-   org-pretty-entities t
-   org-ellipsis "…"
-   org-agenda-tags-column 0
-   org-agenda-block-separator ?─)
-
-   (set-face-attribute 'default nil :family "Iosevka")
-   (set-face-attribute 'variable-pitch nil :family "Iosevka Aile")
-   (set-face-attribute 'org-modern-symbol nil :family "Iosevka")
-
-   ;; (set-face-attribute 'org-block-begin-line nil :background nil)
-   ;; (set-face-attribute 'org-block-end-line nil :background nil)
-   ;; (set-face-attribute 'org-modern-label nil :box '(:line-width 4 :color (face-background 'default)))
-   (setq org-modern-label-border 0)
-   (setq org-startup-indented nil)
-   ;; (setq-default electric-indent-mode nil)
-   (setq-default org-todo-keywords '((sequence "ToDo(t)" "Next(n)" "Blocked(b)" "|" "Done(d!)")))
-   (setq-local line-spacing 0.2)
-   (global-org-modern-mode)
-   )
-#+end_src
-
-[[https://github.com/LemonBreezes/.doom.d/blob/ce425f1f5798411888860ec269b7aa02932d8ffb/lisp/set-up-theme-stuff.el][.doom.d/set-up-theme-stuff.el at ce425f1f5798411888860ec269b7aa02932d8ffb · L...]]
-
-#+begin_src elisp :tangle no
-(defun my-set-face-bg-fg-inverse-video (face bg fg)
-  (set-face-attribute face nil :inverse-video t)
-  (set-face-foreground face bg)
-  (set-face-background face fg))
-
-(after! org
-  (set-face-foreground 'org-todo (face-foreground 'outline-1 nil t))
-  (after! org-modern
-    (my-set-face-bg-fg-inverse-video 'org-modern-done
-                                     (face-foreground 'org-headline-done nil t)
-                                     (alist-get 'background-color (frame-parameters)))
-    (set-face-attribute 'org-modern-done nil :weight 'semibold)
-    (my-set-face-bg-fg-inverse-video 'org-modern-time-inactive
-                                     "gray50"
-                                     (if (< (color-distance (alist-get 'background-color (frame-parameters))
-                                                            "gray95")
-                                            face-near-same-color-threshold)
-                                         "gray95"
-                                       "gray5"))
-    (my-set-face-bg-fg-inverse-video 'org-modern-tag
-                                     (face-foreground 'org-level-1 nil t)
-                                     (alist-get 'background-color (frame-parameters)))
-    (cl-loop for buf being the buffers do
-             (when (buffer-local-value 'org-modern-mode buf)
-               (with-current-buffer buf
-                 (org-modern--update-label-face)))))
-  (set-face-attribute 'org-ellipsis nil
-                      :inherit '(shadow default)
-                      :weight 'normal)
-  (set-face-attribute 'org-document-title nil
-                      :height 1.2))
-
-(after! modus-themes
-  (let ((modus-themes-inhibit-reload t))
-    (setq! modus-themes-italic-constructs t
-            modus-themes-slanted-constructs t
-            modus-themes-bold-constructs nil
-            modus-themes-lang-checkers '(faint)
-            modus-themes-org-blocks 'gray-background
-            modus-themes-mode-line '(3d accented)
-            modus-themes-syntax '(alt-syntax green-strings yellow-comments)
-            modus-themes-headings '((1 . (1.25 extrabold rainbow))
-                                    (2 . (1.15 semibold rainbow))
-                                    (3 . (1.12 semibold rainbow))
-                                    (4 . (1.09 medium rainbow))
-                                    (5 . (1.06 medium rainbow))
-                                    (6 . (1.03 medium rainbow))
-                                    (7 . (medium rainbow))
-                                    (8 . (medium rainbow))
-                                    (t . (rainbow)))
-            modus-themes-box-buttons '(accented semibold 0.9 faint all-buttons)
-            modus-themes-fringes 'intense
-            modus-themes-hl-line '()
-            modus-themes-intense-mouseovers '(neutral-underline background)
-            modus-themes-markup '(intense italic)
-            modus-themes-paren-match '(intense)
-            modus-themes-prompts '(intense bold)
-            modus-themes-region '(accented bg-only)
-            modus-themes-subtle-line-numbers nil
-            modus-themes-tabs-accented t
-            modus-themes-lang-checkers '(straight-underline intense text-also)
-            modus-themes-links '(bold)
-            modus-themes-completions nil
-            modus-themes-mail-citations 'intense
-            modus-themes-deuteranopia nil))
-  (setq! modus-themes-inhibit-reload nil))
+  ;; (set-face-attribute 'org-block-begin-line nil :background nil)
+  ;; (set-face-attribute 'org-block-end-line nil :background nil)
+  ;; (set-face-attribute 'org-modern-label nil :box '(:line-width 4 :color (face-background 'default)))
+  (setq org-modern-label-border 0)
+  (setq org-startup-indented nil)
+  ;; (setq-default electric-indent-mode nil)
+  (setq-default org-todo-keywords '((sequence "ToDo(t)" "Next(n)" "Blocked(b)" "|" "Done(d!)")))
+  (setq-local line-spacing 0.2)
+  (global-org-modern-mode)
+  )
 #+end_src
 
 * Deft
@@ -943,16 +837,6 @@ A ToDo in the header makes the post a draft.
         (sp-local-pair "{-@" "@-")))
 #+end_src
 
-** haskell-lite
-
-#+begin_src elisp
-(use-package! fd-haskell)
-#+end_src
-
-#+begin_src elisp
-(use-package! haskell-lite)
-#+end_src
-
 ** Tidal
 
 ~cabal install tidal --lib~ is the magical incantation.
@@ -1035,16 +919,16 @@ s.reboot
 #+begin_src elisp
 (use-package! dirvish
   :config
+        (dirvish-override-dired-mode)
         (map!
          :leader
          :prefix ("d" . "dirvish")
-         :nvm "d" #'dirvish-dired
-         :nvm "f" #'dirvish)
+         :nvm "d" #'dirvish)
         (map! :map dired-mode-map
         :localleader
         (:nvm "t" #'dirvish-toggle-fullscreen)))
 #+end_src
-** dumb-jump (new)
+** dumb-jump
 
 [[https://github.com/jacktasia/dumb-jump][GitHub - jacktasia/dumb-jump: an Emacs "jump to definition" package for 50+ l...]]
 
