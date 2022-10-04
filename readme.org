@@ -188,7 +188,6 @@ Global configuration, including standard doom library tweaks.
 ;; setq-default sets variables that are usually local to buffers
 (setq-default truncate-lines nil
               indent-tabs-mode nil)
-
 #+end_src
 
 ** evil
@@ -278,6 +277,18 @@ If BIGWORD is non-nil, move by WORDS."
         completion-category-overrides '((file (styles . (partial-completion))))))
 #+end_src
 
+git-gutter
+
+#+begin_src elisp
+(after! git-gutter
+  (global-git-gutter-mode -1)
+  (remove-hook 'find-file-hook #'+vc-gutter-init-maybe-h)
+  (map!
+   :leader
+   :nvm "tv" #'git-gutter-mode
+   :desc "git-gutter-mode")
+)
+#+end_src
 
 #+begin_src elisp
 (define-key isearch-mode-map (kbd "M-j") 'avy-isearch)
@@ -374,13 +385,17 @@ If BIGWORD is non-nil, move by WORDS."
 #+begin_src elisp
 ;; replaces just-one-space
 (map! "M-SPC" #'cycle-spacing)
-(map! :map global-map "M-j" #'avy-goto-char-timer)
 #+end_src
 
 #+begin_src elisp
 (map! (:after evil-org
        :map evil-org-mode-map
        :inv "M-j" nil))
+(map! :map global-map "M-j" #'avy-goto-char-timer)
+(map!
+ (:map 'override
+   :nvm "gss" #'evil-avy-goto-char-timer
+   :nvm "gs/" #'evil-avy-goto-char-2))
 #+end_src
 
 ** discover-my-major
@@ -604,6 +619,7 @@ Keeping a manual list to avoid using customize.
 #+end_src
 
 ** babel
+
 #+begin_src elisp
 (after! org
   :config

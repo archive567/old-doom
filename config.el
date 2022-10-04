@@ -146,6 +146,15 @@ If BIGWORD is non-nil, move by WORDS."
         completion-category-defaults nil
         completion-category-overrides '((file (styles . (partial-completion))))))
 
+(after! git-gutter
+  (global-git-gutter-mode -1)
+  (remove-hook 'find-file-hook #'+vc-gutter-init-maybe-h)
+  (map!
+   :leader
+   :nvm "tv" #'git-gutter-mode
+   :desc "git-gutter-mode")
+)
+
 (define-key isearch-mode-map (kbd "M-j") 'avy-isearch)
 
 (defun isearch-forward-other-window (prefix)
@@ -231,11 +240,15 @@ If BIGWORD is non-nil, move by WORDS."
 
 ;; replaces just-one-space
 (map! "M-SPC" #'cycle-spacing)
-(map! :map global-map "M-j" #'avy-goto-char-timer)
 
 (map! (:after evil-org
        :map evil-org-mode-map
        :inv "M-j" nil))
+(map! :map global-map "M-j" #'avy-goto-char-timer)
+(map!
+ (:map 'override
+   :nvm "gss" #'evil-avy-goto-char-timer
+   :nvm "gs/" #'evil-avy-goto-char-2))
 
 (use-package! discover-my-major)
 
