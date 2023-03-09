@@ -1,1 +1,1 @@
-/Users/tonyday/.doom.d/readme.org
+readme.org
