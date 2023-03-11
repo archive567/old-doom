@@ -278,9 +278,11 @@ If BIGWORD is non-nil, move by WORDS."
 #+end_src
 
 git-gutter
-
+(after! git-gutter
+  (setq git-gutter:disabled-modes '(org-mode image-mode)))
 #+begin_src elisp
 (after! git-gutter
+  (setq git-gutter:disabled-modes '(org-mode image-mode))
   (global-git-gutter-mode -1)
   (remove-hook 'find-file-hook #'+vc-gutter-init-maybe-h)
   (map!
@@ -438,6 +440,16 @@ git-gutter
 | z | bugz   | entry | (file+headline ~/org/bugz.org bugz!) | * ToDo %? |
 
 ** general tweaks
+
+Turn company mode off
+
+#+begin_src elisp
+(after! org
+  :config
+  (progn
+    (set-company-backend! 'org-mode nil)
+    (set-company-backend! 'org-mode '(:separate company-yasnippet company-dabbrev))))
+#+end_src
 
 #+begin_src elisp
 (after! org
@@ -666,11 +678,11 @@ Keeping a manual list to avoid using customize.
 
 (defun org-yank-into-new-block-sh ()
   (interactive)
-  (org-yank-into-new-block "src sh"))
+  (org-yank-into-new-block "src sh :results output"))
 
 (defun org-yank-into-new-block-haskell ()
   (interactive)
-  (org-yank-into-new-block "src haskell"))
+  (org-yank-into-new-block "src haskell :results output"))
 
 (defun org-yank-into-new-quote ()
   (interactive)
