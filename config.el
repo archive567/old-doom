@@ -61,6 +61,7 @@
 (setq evil-split-window-below t
       evil-vsplit-window-right t
       confirm-kill-emacs nil
+      confirm-kill-processes nil
       shift-select-mode t
       window-combination-resize t
       delete-selection-mode t
@@ -147,6 +148,7 @@ If BIGWORD is non-nil, move by WORDS."
         completion-category-overrides '((file (styles . (partial-completion))))))
 
 (after! git-gutter
+  (setq git-gutter:disabled-modes '(org-mode image-mode))
   (global-git-gutter-mode -1)
   (remove-hook 'find-file-hook #'+vc-gutter-init-maybe-h)
   (map!
@@ -268,6 +270,12 @@ If BIGWORD is non-nil, move by WORDS."
       (file+headline "~/org/bugz.org" "bugz!")
       "* ToDo %?
 %a")))))
+
+(after! org
+  :config
+  (progn
+    (set-company-backend! 'org-mode nil)
+    (set-company-backend! 'org-mode '(:separate company-yasnippet company-dabbrev))))
 
 (after! org
   :config
@@ -462,11 +470,11 @@ If BIGWORD is non-nil, move by WORDS."
 
 (defun org-yank-into-new-block-sh ()
   (interactive)
-  (org-yank-into-new-block "src sh"))
+  (org-yank-into-new-block "src sh :results output"))
 
 (defun org-yank-into-new-block-haskell ()
   (interactive)
-  (org-yank-into-new-block "src haskell"))
+  (org-yank-into-new-block "src haskell :results output"))
 
 (defun org-yank-into-new-quote ()
   (interactive)
@@ -542,10 +550,10 @@ If BIGWORD is non-nil, move by WORDS."
    haskell-interactive-popup-errors nil
    lsp-enable-folding nil
    lsp-response-timeout 120
-   ;; lsp-ui-sideline-enable nil
+   lsp-ui-sideline-enable nil
    lsp-ui-doc-enable nil
    ;; lsp-enable-symbol-highlighting nil
-   ;; +lsp-prompt-to-install-server 'quiet
+   +lsp-prompt-to-install-server 'quiet
    lsp-modeline-diagnostics-scope :project
    ;; lsp-modeline-code-actions-segments '(count icon)
    flycheck-check-syntax-automatically '(save)
@@ -581,13 +589,23 @@ If BIGWORD is non-nil, move by WORDS."
 (setq tab-always-indent 'complete)
 
 (after! haskell
-      (sp-with-modes '(haskell-mode haskell-interactive-mode)
-        (sp-local-pair "{-" "-}" :actions :rem)
-        (sp-local-pair "{-#" "#-}" :actions :rem)
-        (sp-local-pair "{-@" "@-}" :actions :rem)
-        (sp-local-pair "{-" "-")
-        (sp-local-pair "{-#" "#-")
-        (sp-local-pair "{-@" "@-")))
+  (map! (:map haskell-interactive-mode-map
+        :n "<RET>" #'haskell-interactive-mode-return)))
+
+(after! haskell
+  (defun haskell-lite-repl-quit (&optional process)
+    "Kill a repl."
+    (interactive)
+    (when (buffer-live-p inferior-haskell-buffer)
+      (with-current-buffer inferior-haskell-buffer
+        (comint-kill-subjob)
+        (kill-buffer))))
+
+  (setq kill-buffer-query-functions
+        (delq 'process-kill-buffer-query-function kill-buffer-query-functions))
+
+  (map! :leader "zhk" #'haskell-lite-repl-quit)
+)
 
 (use-package! tidal
     :init
