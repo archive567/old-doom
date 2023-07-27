@@ -64,3 +64,26 @@
 (disable-packages!
  org-superstar)
 (package! org-modern)
+
+;(package! fd-haskell :recipe
+;  (:host github
+;   :repo "tonyday567/fd-haskell"
+;   :branch "fixes"))
+
+;(package! haskell-lite :recipe
+;  (:host github
+;   :repo "tonyday567/haskell-lite"
+;   :branch "main"))
+
+(package! haskell-lite
+  :recipe (:local-repo "haskell-lite"
+           :build (:not compile)))
+
+(package! fd-haskell
+  :recipe (:local-repo "fd-haskell"
+           :build (:not compile)))
+
+(package! company-ghci)
+(package! ormolu)
+(package! char-menu)
+(package! eglot)

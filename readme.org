@@ -128,8 +128,11 @@ As per default doom config.el.
 ;; font string. You generally only need these two:
 ;;(setq doom-font (font-spec :family "Iosevka ss02" :size 14 :weight 'light)
 ;;      doom-variable-pitch-font (font-spec :family "Iosevka etoile" :size 14))
-(setq doom-font (font-spec :family "Iosevka")
+(setq doom-font (font-spec :family "Victor Mono")
       doom-variable-pitch-font (font-spec :family "Iosevka Aile"))
+
+;;(setq doom-font (font-spec :family "Iosevka")
+;;      doom-variable-pitch-font (font-spec :family "Iosevka Aile"))
 
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
@@ -282,8 +285,6 @@ If BIGWORD is non-nil, move by WORDS."
 #+end_src
 
 git-gutter
-(after! git-gutter
-  (setq git-gutter:disabled-modes '(org-mode image-mode)))
 #+begin_src elisp
 (after! git-gutter
   (setq git-gutter:disabled-modes '(org-mode image-mode))
@@ -322,6 +323,21 @@ git-gutter
 (define-key global-map (kbd "C-M-s") 'isearch-forward-other-window)
 (define-key global-map (kbd "C-M-r") 'isearch-backward-other-window)
 #+end_src
+
+erc
+
+message type codes: https://datatracker.ietf.org/doc/html/rfc2812
+
+  #+begin_src elisp
+  (setq erc-autojoin-channels-alist '(("libera.chat" "#haskell" "#emacs")))
+  (setq erc-hide-list '("JOIN" "PART" "QUIT"))
+  (setq erc-hide-timestamps t)
+  (setq erc-autojoin-timing 'ident)
+  ;; (erc-prompt-for-nickserv-password nil)
+  (setq erc-track-exclude-types '("JOIN" "NICK" "PART" "QUIT" "MODE"
+                                "324" "329" "332" "333" "353" "477"))
+  #+end_src
+
 
 ** Post-dashboard tweak to increase frame.
 
@@ -522,6 +538,7 @@ Keeping a manual list to avoid using customize.
         org-agenda-block-separator nil
         org-agenda-show-future-repeats nil
         org-agenda-compact-blocks t
+        org-agenda-window-setup 'other-window
         org-agenda-show-all-dates nil
         org-agenda-prefix-format
          '((agenda . " %-12t")
@@ -801,9 +818,6 @@ A ToDo in the header makes the post a draft.
 #+end_src
 
 * haskell & lsp
-:BACKLINKS:
-[2021-11-21 Sun 07:55] <- [[file:~/org/haskell-lite.org][file:~/org/haskell-lite.org]]
-:END:
 
 #+begin_src elisp
 ;; haskell
@@ -816,6 +830,10 @@ A ToDo in the header makes the post a draft.
    lsp-enable-folding nil
    lsp-response-timeout 120
    lsp-ui-sideline-enable nil
+   lsp-haskell-plugin-import-lens-code-actions-on nil
+   lsp-haskell-plugin-ghcide-type-lenses-config-mode nil
+   lsp-haskell-plugin-ghcide-type-lenses-global-on nil
+   lsp-haskell-plugin-import-lens-code-lens-on nil
    lsp-ui-doc-enable nil
    ;; lsp-enable-symbol-highlighting nil
    +lsp-prompt-to-install-server 'quiet
@@ -834,9 +852,34 @@ A ToDo in the header makes the post a draft.
    ;;haskell-process-type 'stack-ghci
    haskell-process-type 'cabal-repl
    )
+
+  (haskell-indentation-mode -1)
+  (setq-local tab-stop-list '(2 4))
+  (setq-local indent-line-function 'indent-relative)
+  (setq-local tab-width 2)
+  (setq-local evil-shift-width 2)
+  (define-key evil-insert-state-map (kbd "TAB") 'tab-to-tab-stop)
+  ;(define-key evil-normal-state-map (kbd "C-]") 'haskell-mode-goto-loc)
+  ;(define-key evil-normal-state-map (kbd "C-c C-]") 'haskell-mode-tag-find)
+  ;(define-key evil-normal-state-map (kbd "C-c C-t") 'haskell-mode-show-type-at)
   (global-so-long-mode -1)
-  ;; makes underscore an alphanumeric
-  (add-hook! 'haskell-mode-hook (modify-syntax-entry ?_ "w")))
+  (add-hook! 'haskell-mode-hook 'interactive-haskell-mode)
+  ;(add-hook! 'haskell-mode-hook #'(modify-syntax-entry ?_ "w"))
+  )
+#+end_src
+
+#+begin_src elisp
+(after! haskell
+  (defun mk-haskell-insert-symbol ()
+    "Insert one of the Haskell symbols that are difficult to type."
+    (interactive)
+    (char-menu
+     '("<-" "::"  "->"  "=>"  "="
+       "<*" "<$>" "<*>" "<|>" "*>")))
+    (map! :localleader
+        :map haskell-mode-map
+        (:nvm "m" #'mk-haskell-insert-symbol)
+    ))
 #+end_src
 
 #+begin_src elisp
@@ -879,7 +922,55 @@ A ToDo in the header makes the post a draft.
 
 #+begin_src elisp
 (after! haskell
-  (defun haskell-lite-repl-quit (&optional process)
+  (use-package! haskell-lite
+    :config
+    (map! :localleader
+        :map haskell-mode-map
+        (:prefix ("l" . "lite")
+         :nvm "s" #'haskell-lite-repl-start
+         :nvm "q" #'haskell-lite-repl-quit
+         :nvm "r" #'haskell-lite-repl-show
+         :nvm "l" #'haskell-lite-repl-load-file
+         :nvm "o" #'haskell-lite-repl-overlay
+         :nvm "c" #'haskell-comint-clear-buffer
+         :nvm "k" #'haskell-comint-restart)
+    )))
+#+end_src
+
+#+begin_src elisp
+(after! haskell
+  (use-package! fd-haskell
+    :config
+     (setq haskell-shell-buffer-name "haskell")
+     (setq haskell-shell-interpreter '("cabal" "repl"))
+     (setq haskell-shell-interpreter-args '())
+     (setq haskell-pdbtrack-activate nil)
+    )
+  (add-hook! 'haskell-mode-hook 'fd-haskell-mode))
+#+end_src
+
+#+begin_src elisp :tangle no
+(use-package company-ghci
+  :after pos-tip
+  :config
+  (defun show-hoogle-info-in-popup ()
+    (pos-tip-show (company-ghci/hoogle-info (symbol-at-point))))
+  (defun company-ghci-setup ()
+    (push 'company-ghci company-backends)
+    (define-key evil-normal-state-map (kbd "C-;") (lambda () (interactive) (show-hoogle-info-in-popup))))
+  (add-hook 'haskell-interactive-mode-hook 'company-mode)
+  (add-hook 'haskell-mode-hook 'company-ghci-setup))
+#+end_src
+
+#+begin_src elisp
+(use-package ormolu
+  :bind (:map haskell-mode-map
+              ("C-c r" . ormolu-format-buffer)))
+#+end_src
+
+#+begin_src elisp
+(after! haskell
+  (defun haskell-repl-quit (&optional process)
     "Kill a repl."
     (interactive)
     (when (buffer-live-p inferior-haskell-buffer)
@@ -890,8 +981,18 @@ A ToDo in the header makes the post a draft.
   (setq kill-buffer-query-functions
         (delq 'process-kill-buffer-query-function kill-buffer-query-functions))
 
-  (map! :leader "zhk" #'haskell-lite-repl-quit)
+  (map! :leader "zhk" #'haskell-repl-quit)
 )
+#+end_src
+
+** eglot experiment
+
+#+begin_src elisp :tangle no
+(after! haskell
+  (use-package eglot)
+  (add-hook! 'haskell-mode-hook 'eglot-ensure)
+  (add-to-list 'eglot-server-programs
+             '(haskell-mode . ("haskell-language-server-wrapper" "--lsp"))))
 #+end_src
 
 ** Tidal

@@ -7,11 +7,22 @@
 
 -- startup
 -- C-c C-s start haskell
+-- quit/restart
+-- :q in *tidal* buffer
+
 -- check repl is ok
 -- C-c C-e to run (multiple) line(s)
 
--- space f s
+-- emacs insert mode <i>
+-- emacs normal mode <esc>
 
+
+-- Open file
+-- <Space f f>
+-- Save file (in emacs norml mode)
+-- <Space f s>
+-- save file as...
+-- <Space f S>
 
 hush
 
