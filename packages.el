@@ -75,15 +75,36 @@
 ;   :repo "tonyday567/haskell-lite"
 ;   :branch "main"))
 
-(package! haskell-lite
-  :recipe (:local-repo "haskell-lite"
-           :build (:not compile)))
+;; (package! haskell-lite
+;;   :recipe (:local-repo "haskell-lite"
+;;            :build (:not compile)))
 
-(package! fd-haskell
-  :recipe (:local-repo "fd-haskell"
-           :build (:not compile)))
+;; (package! fd-haskell
+;;   :recipe (:local-repo "fd-haskell"
+;;            :build (:not compile)))
 
 (package! company-ghci)
 (package! ormolu)
 (package! char-menu)
 (package! eglot)
+(package! terminal-here)
+
+(package! dogears)
+(package! clean-kill-ring)
+(package! magit-todos)
+(package! git-lens)
+(package! beacon)
+(package! iscroll)
+;;(package! tree-sitter)
+;;(package! tree-sitter-langs)
+
+;;(package! lsp-haskell
+;;  :recipe (:host github
+;;           :repo "magthe/lsp-haskell"
+;;           :branch "master"))
+;;(package! combobulate)
+
+;; (package! haskell-ng-mode
+;;   :recipe (:type git
+;;            :repo "git@gitlab.com:tonyday567/haskell-ng-mode.git"
+;;            :branch "main"))

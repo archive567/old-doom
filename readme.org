@@ -40,7 +40,7 @@ A useful technique is to do an advanced github search of these repos, together w
 
 ** doom-centric
 
-[[https://github.com/LemonBreezes/.doom.d][GitHub - LemonBreezes/.doom.d: My private doom-emacs config]]
+[[https://github.com/LemonBreezes/cae-emacs][GitHub - LemonBreezes/cae-emacs: My new personal Doom Emacs configuration]]
 
 [[https://github.com/floscr/emacs.d][GitHub - floscr/emacs.d: My emacs config]]
 
@@ -48,19 +48,17 @@ A useful technique is to do an advanced github search of these repos, together w
 
 [[https://github.com/hlissner/doom-emacs-private][GitHub - hlissner/doom-emacs-private: My private module for Doom Emacs]]
 
+[[https://github.com/jethrokuan/dots/blob/master/.doom.d/config.el][dots/config.el at master · jethrokuan/dots · GitHub]]
+
 [[https://github.com/tecosaur/emacs-config/][GitHub - tecosaur/emacs-config: My configuration for Doom Emacs]]
 
 ** from scratch'ish
 
 [[https://zzamboni.org/post/my-emacs-configuration-with-commentary/][zzamboni.org | My Emacs Configuration, With Commentary]]
 
-[[https://github.com/jethrokuan/dots/blob/master/.doom.d/config.el][dots/config.el at master · jethrokuan/dots · GitHub]]
-
 [[https://sachachua.com/dotemacs/][Sacha Chua's Emacs configuration]]
 
-[[https://github.com/daviwil/dotfiles][GitHub - daviwil/dotfiles: The path to GNUrvana
-]]
-[[https://github.com/frap/emacs-literate][GitHub - frap/emacs-literate: Literate emacs config file]]
+[[https://github.com/daviwil/dotfiles][GitHub - daviwil/dotfiles: The path to GNUrvana]]
 
 [[https://github.com/MatthewZMD/.emacs.d][GitHub - MatthewZMD/.emacs.d: M-EMACS, a full-featured GNU Emacs configuratio...]]
 
@@ -268,13 +266,51 @@ If BIGWORD is non-nil, move by WORDS."
 (setq avy-all-windows t)
 #+end_src
 
+*** consult
+
 #+begin_src elisp
-(map! :leader "s f" #'consult-find)
-(map! :leader "s y" #'consult-yank-from-kill-ring)
+(map!
+   :leader "s f" #'consult-find
+   :leader "bo" #'consult-buffer-other-window
+   :leader "s y" #'consult-yank-from-kill-ring
+   "M-#" #'consult-register-load
+   "M-'" #'consult-register-store       ;orig. abbrev-prefix-mark (unrelated)
+   "C-M-#" #'consult-register
+   [remap jump-to-register] #'consult-register-load
+   ;; Other custom bindings
+   ;; M-g bindings (goto-map)
+   "M-g e" #'consult-compile-error
+   "M-g g" #'consult-goto-line          ;orig. goto-line
+   "M-g M-g" #'consult-goto-line        ;orig. goto-line
+   "M-g o" #'consult-outline            ;Alternative: consult-org-heading
+   "M-g m" #'consult-mark
+   "M-g k" #'consult-global-mark
+   "M-g I" #'consult-imenu-multi
+
+   ;; M-s bindings (search-map)
+   "M-s k" #'consult-keep-lines
+   "M-s u" #'consult-focus-lines
+
+   ;; Isearch integration
+   :map isearch-mode-map
+   "M-e" #'consult-isearch-history      ;orig. isearch-edit-string
+   "M-s e" #'consult-isearch-history    ;orig. isearch-edit-string
+   ;; Minibuffer history
+   :map minibuffer-local-map
+   "M-r" #'consult-history     ;orig. previous-matching-history-element
+   ;; Redundant with Doom's :config default bindings
+   :map global-map
+   "M-g f" #'consult-flymake
+   "M-s d" #'consult-find          ;does not cache files like Doom & Projectile
+   "M-s r" #'consult-ripgrep
+   "M-s D" #'consult-locate
+   [remap Info-search] #'consult-info
+   "M-X" #'consult-mode-command)
+
+(map! :map help-map "TAB" #'consult-info)
 #+end_src
 
-#+RESULTS:
-: consult-yank-from-kill-ring
+*** orderless
 
 #+begin_src elisp
 (use-package orderless
@@ -284,7 +320,7 @@ If BIGWORD is non-nil, move by WORDS."
         completion-category-overrides '((file (styles . (partial-completion))))))
 #+end_src
 
-git-gutter
+*** git-gutter
 #+begin_src elisp
 (after! git-gutter
   (setq git-gutter:disabled-modes '(org-mode image-mode))
@@ -296,6 +332,8 @@ git-gutter
    :desc "git-gutter-mode")
 )
 #+end_src
+
+*** isearch
 
 #+begin_src elisp
 (define-key isearch-mode-map (kbd "M-j") 'avy-isearch)
@@ -324,7 +362,7 @@ git-gutter
 (define-key global-map (kbd "C-M-r") 'isearch-backward-other-window)
 #+end_src
 
-erc
+*** erc
 
 message type codes: https://datatracker.ietf.org/doc/html/rfc2812
 
@@ -337,6 +375,27 @@ message type codes: https://datatracker.ietf.org/doc/html/rfc2812
   (setq erc-track-exclude-types '("JOIN" "NICK" "PART" "QUIT" "MODE"
                                 "324" "329" "332" "333" "353" "477"))
   #+end_src
+
+*** global miscellaneous keybindings
+
+#+begin_src elisp
+
+(map! ;; removes from kill ring
+      [remap backward-kill-word] #'doom/delete-backward-word
+      ;; replaces just-one-space
+      "M-SPC" #'cycle-spacing
+      [remap ibuffer] #'ibuffer-jump
+      )
+#+end_src
+
+*** evil-avy
+
+#+begin_src elisp
+(map!
+ (:map 'override
+   :nvm "gss" #'evil-avy-goto-char-timer
+   :nvm "gs/" #'evil-avy-goto-char-2))
+#+end_src
 
 
 ** Post-dashboard tweak to increase frame.
@@ -399,33 +458,6 @@ message type codes: https://datatracker.ietf.org/doc/html/rfc2812
    :leader
    :nvm "tm" #'style/max-frame
    :nvm "td" #'style/left-frame)
-#+end_src
-
-* Keys
-** global keybindings
-
-#+begin_src elisp
-;; replaces just-one-space
-(map! "M-SPC" #'cycle-spacing)
-#+end_src
-
-#+begin_src elisp
-(map! (:after evil-org
-       :map evil-org-mode-map
-       :inv "M-j" nil))
-(map! :map global-map "M-j" #'avy-goto-char-timer)
-(map!
- (:map 'override
-   :nvm "gss" #'evil-avy-goto-char-timer
-   :nvm "gs/" #'evil-avy-goto-char-2))
-#+end_src
-
-** discover-my-major
-
-[[https://github.com/jguenther/discover-my-major][GitHub - jguenther/discover-my-major: Discover key bindings and their meaning...]]
-
-#+begin_src elisp
-(use-package! discover-my-major)
 #+end_src
 
 * Org
@@ -669,6 +701,7 @@ Keeping a manual list to avoid using customize.
           :nvm "e" #'org-yank-into-new-block-elisp
           :nvm "s" #'org-yank-into-new-block-sh
           :nvm "h" #'org-yank-into-new-block-haskell
+          :nvm "n" #'org-new-block-haskell
           :nvm "q" #'org-yank-into-new-quote)))
 
 (defun org-yank-into-new-block (&optional template)
@@ -693,6 +726,25 @@ Keeping a manual list to avoid using customize.
           (deactivate-mark)
           (delete-region begin (point))))))
 
+(defun org-new-block (&optional template)
+    (interactive)
+    (let ((begin (point))
+          done)
+      (unwind-protect
+          (progn
+            (end-of-line)
+            (push-mark begin)
+            (setq mark-active t)
+            (if template
+             (org-insert-structure-template template)
+             (call-interactively #'org-insert-structure-template))
+            (setq done t)
+            (deactivate-mark)
+            (evil-org-open-above 1))
+        (unless done
+          (deactivate-mark)
+          (delete-region begin (point))))))
+
 (defun org-yank-into-new-block-elisp ()
   (interactive)
   (org-yank-into-new-block "src elisp"))
@@ -705,9 +757,35 @@ Keeping a manual list to avoid using customize.
   (interactive)
   (org-yank-into-new-block "src haskell :results output"))
 
+(defun org-new-block-haskell ()
+  (interactive)
+  (org-new-block "src haskell :results output"))
+
 (defun org-yank-into-new-quote ()
   (interactive)
   (org-yank-into-new-block "quote"))
+#+end_src
+
+*** org & haskell-lite (off)
+
+org-mode is often involved before haskell-mode is used.
+
+#+begin_src elisp :tangle no
+(after! org
+  (use-package! haskell-lite
+    :config
+    (setq comint-prompt-regexp "ghci> ")
+    (map! :localleader
+        :map org-mode-map
+        (:prefix ("y" . "haskell-lite")
+         :nvm "s" #'haskell-lite-repl-start
+         :nvm "q" #'haskell-lite-repl-quit
+         :nvm "b" #'haskell-lite-repl-buffer
+         :nvm "l" #'haskell-lite-repl-load-file
+         :nvm "o" #'haskell-lite-repl-overlay
+         :nvm "c" #'haskell-lite-clear-buffer
+         :nvm "k" #'haskell-lite-repl-restart)
+    )))
 #+end_src
 
 ** hugo
@@ -827,6 +905,8 @@ A ToDo in the header makes the post a draft.
    haskell-font-lock-symbols t
    ;; company-idle-delay 0.5
    haskell-interactive-popup-errors nil
+   lsp-lens-enable nil
+   lsp-ui-sideline-show-code-actions nil
    lsp-enable-folding nil
    lsp-response-timeout 120
    lsp-ui-sideline-enable nil
@@ -859,12 +939,9 @@ A ToDo in the header makes the post a draft.
   (setq-local tab-width 2)
   (setq-local evil-shift-width 2)
   (define-key evil-insert-state-map (kbd "TAB") 'tab-to-tab-stop)
-  ;(define-key evil-normal-state-map (kbd "C-]") 'haskell-mode-goto-loc)
-  ;(define-key evil-normal-state-map (kbd "C-c C-]") 'haskell-mode-tag-find)
-  ;(define-key evil-normal-state-map (kbd "C-c C-t") 'haskell-mode-show-type-at)
   (global-so-long-mode -1)
   (add-hook! 'haskell-mode-hook 'interactive-haskell-mode)
-  ;(add-hook! 'haskell-mode-hook #'(modify-syntax-entry ?_ "w"))
+  (add-hook! 'haskell-mode-hook #'tree-sitter-hl-mode)
   )
 #+end_src
 
@@ -918,9 +995,9 @@ A ToDo in the header makes the post a draft.
         :n "<RET>" #'haskell-interactive-mode-return)))
 #+end_src
 
-** haskell-lite
+** haskell-lite (off)
 
-#+begin_src elisp
+#+begin_src elisp :tangle no
 (after! haskell
   (use-package! haskell-lite
     :config
@@ -929,7 +1006,7 @@ A ToDo in the header makes the post a draft.
         (:prefix ("l" . "lite")
          :nvm "s" #'haskell-lite-repl-start
          :nvm "q" #'haskell-lite-repl-quit
-         :nvm "r" #'haskell-lite-repl-show
+         :nvm "b" #'haskell-lite-repl-buffer
          :nvm "l" #'haskell-lite-repl-load-file
          :nvm "o" #'haskell-lite-repl-overlay
          :nvm "c" #'haskell-comint-clear-buffer
@@ -937,7 +1014,7 @@ A ToDo in the header makes the post a draft.
     )))
 #+end_src
 
-#+begin_src elisp
+#+begin_src elisp :tangle no
 (after! haskell
   (use-package! fd-haskell
     :config
@@ -1087,11 +1164,11 @@ s.reboot
         (:nvm "t" #'dirvish-toggle-fullscreen)))
 #+end_src
 
-** dumb-jump
+** dumb-jump [off]
 
 [[https://github.com/jacktasia/dumb-jump][GitHub - jacktasia/dumb-jump: an Emacs "jump to definition" package for 50+ l...]]
 
-#+begin_src elisp
+#+begin_src elisp :tangle no
 (use-package! dumb-jump
   :init
    (progn
@@ -1100,3 +1177,173 @@ s.reboot
    ))
 #+end_src
 
+** dogears
+
+[[https://github.com/alphapapa/dogears.el#usage][GitHub - alphapapa/dogears.el: Never lose your place in Emacs again]]
+
+#+begin_src elisp
+(use-package! dogears
+  :bind (:map global-map
+              ("M-g d" . dogears-go)
+              ("M-g M-b" . dogears-back)
+              ("M-g M-f" . dogears-forward)
+              ("M-g M-l" . dogears-list)
+              ("M-g M-r" . dogears-remember)
+              ("M-g M-S" . dogears-sidebar))
+  :config
+  (setq dogears-limit 300)
+  (setq dogears-line-width 30)
+  ;; Ignored modes
+  (add-to-list 'dogears-ignore-modes 'git-commit-mode)
+  ;; Trigger functions
+  (add-to-list 'dogears-functions 'kill-ring-save)
+  ;; Trigger hooks
+  (add-hook 'dogears-hooks 'after-change-functions)
+
+  :init
+  (dogears-mode)
+)
+#+end_src
+
+** discover-my-major
+
+[[https://github.com/jguenther/discover-my-major][GitHub - jguenther/discover-my-major: Discover key bindings and their meaning...]]
+
+#+begin_src elisp
+(use-package! discover-my-major)
+#+end_src
+
+** clean-kill-ring
+
+#+begin_src elisp
+(use-package! clean-kill-ring
+  :config (clean-kill-ring-mode 1))
+#+end_src
+
+** magit
+
+#+begin_src elisp
+(use-package! magit-todos
+  :config (magit-todos-mode 1))
+#+end_src
+
+#+begin_src elisp
+(use-package! git-lens)
+#+end_src
+
+** beacon
+
+[[https://github.com/Malabarba/beacon][GitHub - Malabarba/beacon: A light that follows your cursor around so you don...]]
+
+#+begin_src elisp
+(use-package! beacon
+  :config (beacon-mode 1))
+#+end_src
+
+** iscroll
+
+[[https://github.com/casouri/iscroll][GitHub - casouri/iscroll: Smooth scrolling over images in Emacs]]
+
+#+begin_src elisp
+(use-package! iscroll
+  :config (iscroll-mode 1))
+#+end_src
+
+
+
+
+
+** tree-sitter (off)
+
+#+begin_src elisp :tangle no
+(use-package! tree-sitter
+  :config
+  (require 'tree-sitter-langs)
+  (global-tree-sitter-mode)
+  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
+  ;; This makes every node a link to a section of code
+  (setq tree-sitter-debug-jump-buttons t
+        ;; and this highlights the entire sub tree in your code
+        tree-sitter-debug-highlight-jump-region t))
+#+end_src
+
+* haskell-ng (off)
+
+#+begin_src elisp :tangle no
+(use-package! haskell-ng-mode
+  :init
+  (add-to-list 'treesit-language-source-alist '(haskell "https://github.com/tree-sitter/tree-sitter-haskell"))
+  (add-to-list 'treesit-language-source-alist '(cabal "https://gitlab.com/magus/tree-sitter-cabal.git"))
+  ;; (treesit-install-language-grammar 'haskell)
+  ;; (treesit-install-language-grammar 'cabal)
+  (add-to-list 'major-mode-remap-alist '(haskell-mode . haskell-ng-mode))
+  (add-to-list 'major-mode-remap-alist '(cabal-mode . cabal-ng-mode))
+  (defalias 'haskell-mode #'haskell-ng-mode)
+  (defalias 'cabal-mode #'cabal-ng-mode)
+  :hook
+  (haskell-ng-mode . lsp-deferred)
+  (haskell-ng-mode . (lambda () (setq-local tab-width 2)))
+  :config
+  (map! :localleader
+        :map haskell-ng-mode-map
+        :nvm "'" #'haskell-ng-repl-run
+        (:prefix ("=" . "format")
+         :nvm "=" #'lsp-format-buffer)
+        (:prefix ("g" . "goto")
+         :nvm "p" #'pop-tag-mark
+         :nvm "d" #'evil-goto-definition
+         :nvm "h" #'lsp-describe-thing-at-point
+         :nvm "r" #'xref-find-definitions
+         :nvm "t" #'lsp-find-type-definition
+         :nvm "T" #'lsp-goto-type-definition)
+        (:prefix ("," . "backend")
+         :nvm "e" #'eglot
+         :nvm "l" #'lsp
+         :nvm "r" #'lsp-workspace-restart
+         :nvm "q" #'lsp-workspace-shutdown))
+  (map! :localleader
+        :map cabal-ng-mode-map
+        (:prefix ("=" . "format")
+         :nvm "=" #'cabal-format-buffer
+         :nvm "r" #'cabal-format-region))
+)
+#+end_src
+
+* global treesit functionality
+
+#+begin_src elisp :tangle no
+
+(defun ts-inspect ()
+  (interactive)
+  (when-let* ((nap (treesit-node-at (point))))
+    (message "%S - %S" nap (treesit-node-type nap))))
+
+(defun ts-query-root (query)
+  (interactive "sQuery: ")
+  (let ((ss0 (treesit-query-capture (treesit-buffer-root-node) query)))
+    (message "%S" ss0)))
+
+#+end_src
+
+* lsp-haskell
+
+#+begin_src elisp :tangle no
+(use-package! lsp-haskell
+  :config
+  (setq
+        lsp-haskell-brittany-on nil
+        lsp-haskell-floskell-on nil
+        lsp-haskell-fourmolu-on nil
+        lsp-haskell-stylish-haskell-on nil
+        lsp-haskell-retrie-on nil
+        lsp-haskell-plugin-import-lens-code-actions-on nil
+        lsp-haskell-plugin-ghcide-type-lenses-config-mode nil
+        lsp-haskell-plugin-ghcide-type-lenses-global-on nil
+        lsp-haskell-plugin-import-lens-code-lens-on nil))
+#+end_src
+
+* combobulate
+
+#+begin_src elisp :tangle no
+(use-package! combobulate)
+#+end_src

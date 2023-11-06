@@ -141,8 +141,45 @@ If BIGWORD is non-nil, move by WORDS."
 (setq vertico-sort-function #'vertico-sort-history-alpha)
 (setq avy-all-windows t)
 
-(map! :leader "s f" #'consult-find)
-(map! :leader "s y" #'consult-yank-from-kill-ring)
+(map!
+   :leader "s f" #'consult-find
+   :leader "bo" #'consult-buffer-other-window
+   :leader "s y" #'consult-yank-from-kill-ring
+   "M-#" #'consult-register-load
+   "M-'" #'consult-register-store       ;orig. abbrev-prefix-mark (unrelated)
+   "C-M-#" #'consult-register
+   [remap jump-to-register] #'consult-register-load
+   ;; Other custom bindings
+   ;; M-g bindings (goto-map)
+   "M-g e" #'consult-compile-error
+   "M-g g" #'consult-goto-line          ;orig. goto-line
+   "M-g M-g" #'consult-goto-line        ;orig. goto-line
+   "M-g o" #'consult-outline            ;Alternative: consult-org-heading
+   "M-g m" #'consult-mark
+   "M-g k" #'consult-global-mark
+   "M-g I" #'consult-imenu-multi
+
+   ;; M-s bindings (search-map)
+   "M-s k" #'consult-keep-lines
+   "M-s u" #'consult-focus-lines
+
+   ;; Isearch integration
+   :map isearch-mode-map
+   "M-e" #'consult-isearch-history      ;orig. isearch-edit-string
+   "M-s e" #'consult-isearch-history    ;orig. isearch-edit-string
+   ;; Minibuffer history
+   :map minibuffer-local-map
+   "M-r" #'consult-history     ;orig. previous-matching-history-element
+   ;; Redundant with Doom's :config default bindings
+   :map global-map
+   "M-g f" #'consult-flymake
+   "M-s d" #'consult-find          ;does not cache files like Doom & Projectile
+   "M-s r" #'consult-ripgrep
+   "M-s D" #'consult-locate
+   [remap Info-search] #'consult-info
+   "M-X" #'consult-mode-command)
+
+(map! :map help-map "TAB" #'consult-info)
 
 (use-package orderless
   :init
@@ -192,6 +229,18 @@ If BIGWORD is non-nil, move by WORDS."
 ;; (erc-prompt-for-nickserv-password nil)
 (setq erc-track-exclude-types '("JOIN" "NICK" "PART" "QUIT" "MODE"
                               "324" "329" "332" "333" "353" "477"))
+
+(map! ;; removes from kill ring
+      [remap backward-kill-word] #'doom/delete-backward-word
+      ;; replaces just-one-space
+      "M-SPC" #'cycle-spacing
+      [remap ibuffer] #'ibuffer-jump
+      )
+
+(map!
+ (:map 'override
+   :nvm "gss" #'evil-avy-goto-char-timer
+   :nvm "gs/" #'evil-avy-goto-char-2))
 
 (defun style/left-frame ()
   (interactive)
@@ -250,20 +299,6 @@ If BIGWORD is non-nil, move by WORDS."
    :leader
    :nvm "tm" #'style/max-frame
    :nvm "td" #'style/left-frame)
-
-;; replaces just-one-space
-(map! "M-SPC" #'cycle-spacing)
-
-(map! (:after evil-org
-       :map evil-org-mode-map
-       :inv "M-j" nil))
-(map! :map global-map "M-j" #'avy-goto-char-timer)
-(map!
- (:map 'override
-   :nvm "gss" #'evil-avy-goto-char-timer
-   :nvm "gs/" #'evil-avy-goto-char-2))
-
-(use-package! discover-my-major)
 
 (after! org
   (setq
@@ -452,6 +487,7 @@ If BIGWORD is non-nil, move by WORDS."
           :nvm "e" #'org-yank-into-new-block-elisp
           :nvm "s" #'org-yank-into-new-block-sh
           :nvm "h" #'org-yank-into-new-block-haskell
+          :nvm "n" #'org-new-block-haskell
           :nvm "q" #'org-yank-into-new-quote)))
 
 (defun org-yank-into-new-block (&optional template)
@@ -476,6 +512,25 @@ If BIGWORD is non-nil, move by WORDS."
           (deactivate-mark)
           (delete-region begin (point))))))
 
+(defun org-new-block (&optional template)
+    (interactive)
+    (let ((begin (point))
+          done)
+      (unwind-protect
+          (progn
+            (end-of-line)
+            (push-mark begin)
+            (setq mark-active t)
+            (if template
+             (org-insert-structure-template template)
+             (call-interactively #'org-insert-structure-template))
+            (setq done t)
+            (deactivate-mark)
+            (evil-org-open-above 1))
+        (unless done
+          (deactivate-mark)
+          (delete-region begin (point))))))
+
 (defun org-yank-into-new-block-elisp ()
   (interactive)
   (org-yank-into-new-block "src elisp"))
@@ -487,6 +542,10 @@ If BIGWORD is non-nil, move by WORDS."
 (defun org-yank-into-new-block-haskell ()
   (interactive)
   (org-yank-into-new-block "src haskell :results output"))
+
+(defun org-new-block-haskell ()
+  (interactive)
+  (org-new-block "src haskell :results output"))
 
 (defun org-yank-into-new-quote ()
   (interactive)
@@ -560,6 +619,8 @@ If BIGWORD is non-nil, move by WORDS."
    haskell-font-lock-symbols t
    ;; company-idle-delay 0.5
    haskell-interactive-popup-errors nil
+   lsp-lens-enable nil
+   lsp-ui-sideline-show-code-actions nil
    lsp-enable-folding nil
    lsp-response-timeout 120
    lsp-ui-sideline-enable nil
@@ -592,12 +653,9 @@ If BIGWORD is non-nil, move by WORDS."
   (setq-local tab-width 2)
   (setq-local evil-shift-width 2)
   (define-key evil-insert-state-map (kbd "TAB") 'tab-to-tab-stop)
-  ;(define-key evil-normal-state-map (kbd "C-]") 'haskell-mode-goto-loc)
-  ;(define-key evil-normal-state-map (kbd "C-c C-]") 'haskell-mode-tag-find)
-  ;(define-key evil-normal-state-map (kbd "C-c C-t") 'haskell-mode-show-type-at)
   (global-so-long-mode -1)
   (add-hook! 'haskell-mode-hook 'interactive-haskell-mode)
-  ;(add-hook! 'haskell-mode-hook #'(modify-syntax-entry ?_ "w"))
+  (add-hook! 'haskell-mode-hook #'tree-sitter-hl-mode)
   )
 
 (after! haskell
@@ -630,31 +688,6 @@ If BIGWORD is non-nil, move by WORDS."
 (after! haskell
   (map! (:map haskell-interactive-mode-map
         :n "<RET>" #'haskell-interactive-mode-return)))
-
-(after! haskell
-  (use-package! haskell-lite
-    :config
-    (map! :localleader
-        :map haskell-mode-map
-        (:prefix ("l" . "lite")
-         :nvm "s" #'haskell-lite-repl-start
-         :nvm "q" #'haskell-lite-repl-quit
-         :nvm "r" #'haskell-lite-repl-show
-         :nvm "l" #'haskell-lite-repl-load-file
-         :nvm "o" #'haskell-lite-repl-overlay
-         :nvm "c" #'haskell-comint-clear-buffer
-         :nvm "k" #'haskell-comint-restart)
-    )))
-
-(after! haskell
-  (use-package! fd-haskell
-    :config
-     (setq haskell-shell-buffer-name "haskell")
-     (setq haskell-shell-interpreter '("cabal" "repl"))
-     (setq haskell-shell-interpreter-args '())
-     (setq haskell-pdbtrack-activate nil)
-    )
-  (add-hook! 'haskell-mode-hook 'fd-haskell-mode))
 
 (use-package ormolu
   :bind (:map haskell-mode-map
@@ -723,9 +756,40 @@ If BIGWORD is non-nil, move by WORDS."
         :localleader
         (:nvm "t" #'dirvish-toggle-fullscreen)))
 
-(use-package! dumb-jump
+(use-package! dogears
+  :bind (:map global-map
+              ("M-g d" . dogears-go)
+              ("M-g M-b" . dogears-back)
+              ("M-g M-f" . dogears-forward)
+              ("M-g M-l" . dogears-list)
+              ("M-g M-r" . dogears-remember)
+              ("M-g M-S" . dogears-sidebar))
+  :config
+  (setq dogears-limit 300)
+  (setq dogears-line-width 30)
+  ;; Ignored modes
+  (add-to-list 'dogears-ignore-modes 'git-commit-mode)
+  ;; Trigger functions
+  (add-to-list 'dogears-functions 'kill-ring-save)
+  ;; Trigger hooks
+  (add-hook 'dogears-hooks 'after-change-functions)
+
   :init
-   (progn
-     (add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
-     (setq xref-show-definitions-function #'xref-show-definitions-completing-read)
-   ))
+  (dogears-mode)
+)
+
+(use-package! discover-my-major)
+
+(use-package! clean-kill-ring
+  :config (clean-kill-ring-mode 1))
+
+(use-package! magit-todos
+  :config (magit-todos-mode 1))
+
+(use-package! git-lens)
+
+(use-package! beacon
+  :config (beacon-mode 1))
+
+(use-package! iscroll
+  :config (iscroll-mode 1))
